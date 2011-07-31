@@ -13,8 +13,12 @@ app.config.from_object('config.%sConfig' % config_class_name)
 # Views
 @app.route('/')
 def index():
-    # TODO: Get user and use the home page if logged in
     return render_template('index.html')
+
+@app.route('/scraper')
+def index():
+    # TODO: Handle email scraping
+    return 'TODO: implement'
 
 # Error handlers
 @app.errorhandler(404)
