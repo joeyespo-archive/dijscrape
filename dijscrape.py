@@ -15,8 +15,8 @@ app.config.from_object('config.%sConfig' % config_class_name)
 def index():
     return render_template('index.html')
 
-@app.route('/scraper')
-def index():
+@app.route('/scrape')
+def scrape():
     # TODO: Handle email scraping
     return 'TODO: implement'
 
