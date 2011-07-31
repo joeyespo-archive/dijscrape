@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block metahead %}
+    <meta charset="utf-8" />
+    {% endblock %}
+    {% block head %}
+    <title>{%block fulltitle%}{% block title %}{% endblock %} - DijScrape{% endblock %}</title>
+    {% block styles %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename='style.css') }}" />
+    {% block additionalstyles %}{% endblock %}
+    {% endblock %}
+    {% block favicon %}
+    <link rel="shortcut icon" href="{{ url_for('.static', filename='favicon.ico') }}">
+    {% endblock %}
+    {% block scripts %}
+    <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript" src="{{ url_for('.static', filename='jquery.css') }}"></script>
+    {% block additionalscripts %}{% endblock %}
+    {% endblock %}
+    {% endblock %}
+</head>
+<body>
+    <section class="content">
+        {% block content %}{% endblock %}
+    </section>
+    <section class="footer">
+        {% block footer %}
+        <!-- TODO: Copyright? -->
+        {% endblock %}
+    </section>
+</body>
+</html>
