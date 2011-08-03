@@ -1,4 +1,5 @@
 # Environment-specific files such as configuration, logs, and setup
+docs/*
 env/*
 logs/*
 local_config.py
