@@ -44,7 +44,7 @@ def oauth_authorized():
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'], "GET")
     # TODO: Handle 'Deny access' (status 400)
     if resp['status'] != '200':
-        raise Exception("Invalid response from Google.")
+        abort(502, 'Invalid response from Google.')
     access_token = dict(cgi.parse_qsl(content))
     # TODO: Store the access token
     return redirect(url_for('oauth_scraper'))
