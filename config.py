@@ -9,6 +9,8 @@ from config import DevelopmentConfig
 DevelopmentConfig.DEV_PORT = 80
 """
 
+# TODO: Have attribute markers indicating an override is required and show error in app
+
 class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
@@ -17,7 +19,6 @@ class BaseConfig(object):
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
-    # TODO: Have attribute markers indicating an override is required and show error in app
     # Override these in your local config file
     APP_SECRET_KEY = ''
     OAUTH_CONSUMER_KEY = ''
@@ -33,17 +34,12 @@ class DevelopmentConfig(BaseConfig):
 class ProductionConfig(BaseConfig):
     DATABASE_URI = 'mysql://dijscrape@localhost/dijscrape'
 
-# Try importing the general local configuration
-try:
-    import config_local
-except:
-    pass
+# Try importing the local configurations
+try: import config_local
+except ImportError: pass
 
-# Try importing local environment configuration, 'production' taking precedence
-try:
-    import config_prod
-except:
-    try:
-        import config_dev
-    except:
-        pass
+try: import config_prod
+except ImportError: pass
+
+try: import config_dev
+except ImportError: pass
