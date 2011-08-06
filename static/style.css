@@ -1,1 +1,13 @@
 @charset "utf-8";
+
+body {
+    background-color: #CEF;
+}
+
+.page {
+    background-color: white;
+    width: 500px;
+    margin: 20px auto 0px auto;
+    padding: 30px;
+    border: 1px solid gray;
+}
