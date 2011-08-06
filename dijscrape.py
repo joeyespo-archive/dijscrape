@@ -2,9 +2,8 @@
 
 import os
 import cgi
-import oauth2
+import oauth2 as oauth
 from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
-from flaskext.oauth import OAuth
 
 # Get config class name based on context
 config_class_name = 'Development' if __name__ == '__main__' else 'Production'
@@ -15,8 +14,8 @@ app.config.from_object('config.%sConfig' % config_class_name)
 app.secret_key = app.config['APP_SECRET_KEY']
 
 # TODO: Move this part elsewhere
-consumer = oauth2.Consumer(app.config['OAUTH_CONSUMER_KEY'], app.config['OAUTH_CONSUMER_SECRET'])
-client = oauth2.Client(consumer)
+consumer = oauth.Consumer(app.config['OAUTH_CONSUMER_KEY'], app.config['OAUTH_CONSUMER_SECRET'])
+client = oauth.Client(consumer)
 
 # Views
 @app.route('/')
@@ -40,8 +39,8 @@ def oauth_scraper():
 # OAuth callbacks
 @app.route('/oauth-authorized')
 def oauth_authorized():
-    token = oauth2.Token(session['request_token']['oauth_token'], session['request_token']['oauth_token_secret'])
-    client = oauth2.Client(consumer, token)
+    token = oauth.Token(session['request_token']['oauth_token'], session['request_token']['oauth_token_secret'])
+    client = oauth.Client(consumer, token)
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'], "GET")
     # TODO: Handle 'Deny access' (status 400)
     if resp['status'] != '200':
