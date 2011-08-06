@@ -4,6 +4,7 @@ import os
 import cgi
 import oauth2 as oauth
 from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
+from scraper import Scraper
 
 # Get config class name based on context
 config_class_name = 'Development' if __name__ == '__main__' else 'Production'
@@ -14,7 +15,7 @@ app.config.from_object('config.%sConfig' % config_class_name)
 app.secret_key = app.config['APP_SECRET_KEY']
 
 # TODO: Move this part elsewhere
-consumer = oauth.Consumer(app.config['OAUTH_CONSUMER_KEY'], app.config['OAUTH_CONSUMER_SECRET'])
+consumer = oauth.Consumer(app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
 client = oauth.Client(consumer)
 
 # Views

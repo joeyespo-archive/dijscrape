@@ -21,8 +21,8 @@ class BaseConfig(object):
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
     # Override these in your local config file
     APP_SECRET_KEY = ''
-    OAUTH_CONSUMER_KEY = ''
-    OAUTH_CONSUMER_SECRET = ''
+    GOOGLE_KEY = ''
+    GOOELE_SECRET = ''
 
 class DevelopmentConfig(BaseConfig):
     DEV_HOST = 'localhost'
