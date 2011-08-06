@@ -3,6 +3,8 @@ docs/*
 env/*
 logs/*
 local_config.py
+config_dev.py
+config_prod.py
 
 # Python bytecode files
 *.pyc

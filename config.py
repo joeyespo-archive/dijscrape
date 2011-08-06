@@ -1,8 +1,8 @@
 """\
 Config
 
-To add a local configuration, create a file named local_config.py within this
-directory. In it, import this module and set the apporipriate class properties.
+To add a local configuration, create either config_dev.py or config_prod.py
+within this directory. In it, import this module and override any attributes.
 
 For example:
 from config import DevelopmentConfig
@@ -17,6 +17,7 @@ class BaseConfig(object):
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
+    # TODO: Have attribute markers indicating an override is required and show error in app
     # Override these in your local config file
     APP_SECRET_KEY = ''
     OAUTH_CONSUMER_KEY = ''
@@ -32,8 +33,17 @@ class DevelopmentConfig(BaseConfig):
 class ProductionConfig(BaseConfig):
     DATABASE_URI = 'mysql://dijscrape@localhost/dijscrape'
 
-# Try importing the local configuration
+# Try importing the general local configuration
 try:
-    import local_config
+    import config_local
 except:
     pass
+
+# Try importing local environment configuration, 'production' taking precedence
+try:
+    import config_prod
+except:
+    try:
+        import config_dev
+    except:
+        pass
