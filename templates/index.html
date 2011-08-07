@@ -5,7 +5,9 @@
 {% block content %}
 <article>
     <h1> Login </h1>
-    <p> Try DijScrape for free by loggin in. </p>
-    <p> <a href="login"><img src="{{ url_for('.static', filename='login-with-google-button.png') }}" alt="Login"></a> </p>
+    <form action="/login" method="GET">
+        Email address: <input type="text" name="email" />
+        <p> <input type="image" src="{{ url_for('.static', filename='login-with-google-button.png') }}" alt="Submit" /> </p>
+    </form>
 </article>
 {% endblock %}

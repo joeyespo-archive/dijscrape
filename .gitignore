@@ -5,6 +5,8 @@ logs/*
 local_config.py
 config_dev.py
 config_prod.py
+# Celery is external config
+celeryconfig.py
 
 # Python bytecode files
 *.pyc

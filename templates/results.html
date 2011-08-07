@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Phone numbers found{% endblock %}
+
+{% block content %}
+<article>
+    {% if phone_numbers %}
+    <h1> Phone numbers found </h1>
+    <p>
+        <ul>
+            {% for phone_number in phone_numbers %}
+            <li>
+                From: {{ phone_number['message']['sender'] }} ({{ phone_number['message']['sender_email'] }}) <br />
+                Subject: {{ phone_number['message']['subject'] }} <br />
+                Date: {{ phone_number['message']['date_add'] }} <br />
+                Phone Number: {{ phone_number['value'] }} <br />
+            </li>
+            {% endfor %}
+        </ul>
+    </p>
+    {% else %}
+    <h1> No phone numbers found </h1>
+    <p>
+        Note: only your inbox is checked at the moment. Also, conversations with more than one message are not yet handled.
+        Try putting a single message containing a phone number there.
+    </p>
+    {% endif %}
+</article>
+{% endblock %}
