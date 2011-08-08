@@ -70,9 +70,14 @@ def find_phone_numbers(imap, number):
 
 @task()
 def scrape_gmail_messages(email, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
-    url = 'https://mail.google.com/mail/b/%s/imap/' % email
     consumer = oauth.Consumer(consumer_key, consumer_secret)
     token = oauth.Token(access_oauth_token, access_oauth_token_secret)
+    client = oauth.Client(consumer, token)
+    
+    # TODO: Get the email from Google contacts
+    print client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=1')
+    
+    url = 'https://mail.google.com/mail/b/%s/imap/' % email
     imap = imaplib.IMAP4_SSL('imap.googlemail.com')
     imap.authenticate(url, consumer, token)
     

@@ -15,7 +15,7 @@ class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
     DATABASE_URI = ''
-    OAUTH_SCOPE_URL = 'https://mail.google.com/'
+    OAUTH_SCOPE_URL = 'https://mail.google.com/+https://www.google.com/m8/feeds/'
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
