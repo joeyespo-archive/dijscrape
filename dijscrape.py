@@ -25,21 +25,16 @@ def index():
 
 @app.route('/login')
 def login():
-    email = request.args.get('email')
-    if not email:
-        flash('Please enter a valid email.')
-        return redirect('/')
     resp, content = client.request(app.config['OAUTH_REQUEST_TOKEN_URL'])
     if resp['status'] != '200':
         abort(502, 'Invalid response from Google.')
     session['request_token'] = dict(cgi.parse_qsl(content))
     return redirect('%s?oauth_token=%s&oauth_callback=http://%s%s'
-        % (app.config['OAUTH_AUTHORIZATION_URL'], session['request_token']['oauth_token'], request.host, url_for('oauth_authorized', email=email)))
+        % (app.config['OAUTH_AUTHORIZATION_URL'], session['request_token']['oauth_token'], request.host, url_for('oauth_authorized')))
 
 
 @app.route('/oauth-authorized')
 def oauth_authorized():
-    email = request.args.get('email')
     token = oauth.Token(session['request_token']['oauth_token'], session['request_token']['oauth_token_secret'])
     client = oauth.Client(consumer, token)
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'])
@@ -48,16 +43,14 @@ def oauth_authorized():
         # TODO: Show better error
         abort(502, 'Invalid response from Google.')
     session['access_token'] = dict(cgi.parse_qsl(content))
-    return redirect(url_for('oauth_scraper', email=email))
+    return redirect(url_for('oauth_scraper'))
 
 
 @app.route('/oauth-scraper')
 def oauth_scraper():
-    email = request.args.get('email')
-    # TODO: Get the email from oauth -- need multiple scopes to do this: http://stackoverflow.com/questions/3128981/require-google-to-return-email-address-as-part-of-oauth
     access_oauth_token, access_oauth_token_secret = session['access_token']['oauth_token'], session['access_token']['oauth_token_secret']
     consumer_key, consumer_secret = app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET']
-    result = scrape_gmail_messages.delay(email, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret)
+    result = scrape_gmail_messages.delay(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret)
     # TODO: return render_template('processing.html')
     phone_numbers = result.get()
     return render_template('results.html', phone_numbers=phone_numbers)

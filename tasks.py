@@ -1,11 +1,14 @@
 import sys
 import re
 import datetime
+import dateutil
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
 from email.parser import HeaderParser
-from dateutil.parser import parse
+from xml.dom import minidom
 from celery.decorators import task
+
+# TODO: Handle bad resp values and exceptions
 
 
 number_re = re.compile('(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?')
@@ -16,7 +19,6 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 def find_phone_numbers(imap, number):
     print 'Processing message', number
     
-    # TODO: Handle exceptions and bad resp
     resp, message_data = imap.fetch(number, '(BODY.PEEK[HEADER])')
     raw_message = message_data[0][1] # message_data, the data structure returned by imaplib, encodes some data re: the request type
     header = HeaderParser().parsestr(raw_message)
@@ -26,7 +28,6 @@ def find_phone_numbers(imap, number):
         print 'Skipping multipart message'
         return []
     
-    # TODO: Handle exceptions and bad resp
     resp, message_data = imap.fetch(number, '(BODY.PEEK[TEXT])')
     text_payload = message_data[0][1]
     raw_phone_numbers = number_re.findall(text_payload) + number_re.findall(header['Subject'])
@@ -37,7 +38,7 @@ def find_phone_numbers(imap, number):
         return []
     
     date_timestamp = header['Date']
-    date = parse(date_timestamp)
+    date = dateutil.parser.parse(date_timestamp)
     print 'Header date:', date, '(', date_timestamp, ')'
     
     # This may fail due to unicode issues
@@ -69,24 +70,26 @@ def find_phone_numbers(imap, number):
 
 
 @task()
-def scrape_gmail_messages(email, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
     consumer = oauth.Consumer(consumer_key, consumer_secret)
     token = oauth.Token(access_oauth_token, access_oauth_token_secret)
     client = oauth.Client(consumer, token)
     
-    # TODO: Get the email from Google contacts
-    print client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=1')
+    # Get the email address from Google contacts
+    resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
+    email = parse_email(xmldoc)
     
+    # Connect with IMAP
     url = 'https://mail.google.com/mail/b/%s/imap/' % email
     imap = imaplib.IMAP4_SSL('imap.googlemail.com')
     imap.authenticate(url, consumer, token)
     
-    # TODO: Handle bad resp
+    # Get message count
     resp, message_count = imap.select()
     message_count = int(message_count[0])
     print "Message count: %d" % message_count
     
-    # TODO: Handle bad resp
+    # Get messages
     resp, messages = imap.search(None, 'ALL')
     messages = messages[0].split()
     
@@ -97,3 +100,20 @@ def scrape_gmail_messages(email, access_oauth_token, access_oauth_token_secret, 
     
     imap.logout()
     return phone_numbers
+
+
+def parse_email(xmldoc):
+    document = minidom.parseString(xmldoc)
+    feedElement = document.firstChild
+    for childNode in feedElement.childNodes:
+        if childNode.localName == 'id':
+            return get_text(childNode)
+    return ''
+
+
+def get_text(node):
+    rc = []
+    for node in node.childNodes:
+        if node.nodeType == node.TEXT_NODE:
+            rc.append(node.data)
+    return ''.join(rc)
