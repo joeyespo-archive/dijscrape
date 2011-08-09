@@ -15,8 +15,7 @@ class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
     DATABASE_URI = ''
-    OAUTH_SCOPE_URL = 'https://mail.google.com/+https://www.google.com/m8/feeds/'
-    OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken'
+    OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken?scope=https://mail.google.com/+https://www.google.com/m8/feeds/'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
     # Override these in your local config file
@@ -34,7 +33,7 @@ class DevelopmentConfig(BaseConfig):
 class ProductionConfig(BaseConfig):
     DATABASE_URI = 'mysql://dijscrape@localhost/dijscrape'
 
-# Try importing the local configurations
+# Import the local configurations, if they exist
 try: import config_local
 except ImportError: pass
 

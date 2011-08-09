@@ -29,8 +29,7 @@ def login():
     if not email:
         flash('Please enter a valid email.')
         return redirect('/')
-    # TODO: Multiple scopes? See: http://code.google.com/apis/accounts/docs/OAuth_ref.html#SigningOAuth
-    resp, content = client.request(app.config['OAUTH_REQUEST_TOKEN_URL'] + '?scope=' + app.config['OAUTH_SCOPE_URL'])
+    resp, content = client.request(app.config['OAUTH_REQUEST_TOKEN_URL'])
     if resp['status'] != '200':
         abort(502, 'Invalid response from Google.')
     session['request_token'] = dict(cgi.parse_qsl(content))
