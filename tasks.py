@@ -4,7 +4,7 @@ import datetime
 import dateutil
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
-from email.parser import HeaderParser
+from email import message_from_string
 from xml.dom import minidom
 from celery.decorators import task
 
@@ -53,20 +53,14 @@ def find_phone_numbers(imap, number):
     # TODO: Clean up debugging info
     print 'Processing message', number
     
-    resp, message_data = imap.fetch(number, '(BODY.PEEK[HEADER])')
+    resp, message_data = imap.fetch(number, '(BODY[])')
     raw_message = message_data[0][1]    # Encodes some data re: the request type
-    header = HeaderParser().parsestr(raw_message)
-    # TODO: Handle multipart messages -- get_email_text
-    # Check for multipart message
-    #if 'multipart' in (header['Content-Type'] or []):
-    #    print 'Skipping multipart message'
-    #    return []
-    print header['Content-Type']
-    print
+    message = message_from_string(raw_message)
     
+    content = get_email_text(message)
     resp, message_data = imap.fetch(number, '(BODY.PEEK[TEXT])')
-    text_payload = message_data[0][1]
-    raw_phone_numbers = number_re.findall(text_payload) + number_re.findall(header['Subject'])
+    text_payload = content #message_data[0][1]
+    raw_phone_numbers = number_re.findall(text_payload) + number_re.findall(message['Subject'])
     # TODO: Make this more clear (flattens ['','650','555','1212'] to a string)
     phone_numbers = list(set(map(''.join, raw_phone_numbers)))
     # TODO: Handle numbers without area codes
@@ -75,13 +69,13 @@ def find_phone_numbers(imap, number):
     if len(phone_numbers) == 0:
         return []
     
-    date_timestamp = header['Date']
+    date_timestamp = message['Date']
     date = dateutil.parser.parse(date_timestamp)
     print 'Header date:', date, '(', date_timestamp, ')'
     
     # This may fail due to unicode issues
     try:
-        name, email = email_re.match(header['From']).groups()[1:3]
+        name, email = email_re.match(message['From']).groups()[1:3]
         print 'From:', name, email
     except:
         from traceback import format_exc
@@ -89,18 +83,18 @@ def find_phone_numbers(imap, number):
         return []
     
     # TODO: Use classes instead of dictionaries
-    message = {
-        'sender': header['From'],
-        'recipient': header['To'],
+    message_info = {
+        'sender': message['From'],
+        'recipient': message['To'],
         'sender_name': name,
         'sender_email': email,
-        'subject': header['Subject'],
+        'subject': message['Subject'],
         'date_add': date,
         'payload': text_payload,
     }
     phone_number_objects = []
     for phone_number in phone_numbers:
-        phone_number_objects.append({'value': phone_number, 'formatted': format_phone_number(phone_number), 'message': message})
+        phone_number_objects.append({'value': phone_number, 'formatted': format_phone_number(phone_number), 'message': message_info})
     return phone_number_objects
 
 
@@ -129,3 +123,19 @@ def xml_get_text(node):
         if node.nodeType == node.TEXT_NODE:
             rc.append(node.data)
     return ''.join(rc)
+
+
+def get_email_text(message):
+    if message.is_multipart():
+        text = ''
+        html = None
+        for part in message.get_payload():
+            charset = part.get_content_charset() or chardet.detect(str(part))['encoding']
+            content_type = part.get_content_type()
+            content = unicode(part.get_payload(decode=True),str(charset),'ignore').encode('utf8','replace')
+            if content_type == 'text/plain':
+                text = content
+            if content_type == 'text/html':
+                html = content
+        return (text if html is None else html).strip()
+    return unicode(message.get_payload(decode=True), message.get_content_charset(),'ignore').encode('utf8','replace').strip()
