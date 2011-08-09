@@ -16,6 +16,39 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 
 
 @task()
+def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+    consumer = oauth.Consumer(consumer_key, consumer_secret)
+    token = oauth.Token(access_oauth_token, access_oauth_token_secret)
+    client = oauth.Client(consumer, token)
+    
+    # Get the email address from Google contacts
+    resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
+    email = parse_email(xmldoc)
+    
+    # Connect with IMAP
+    url = 'https://mail.google.com/mail/b/%s/imap/' % email
+    imap = imaplib.IMAP4_SSL('imap.googlemail.com')
+    imap.authenticate(url, consumer, token)
+    
+    # Get message count
+    resp, message_count = imap.select()
+    message_count = int(message_count[0])
+    print "Message count: %d" % message_count
+    
+    # Get messages
+    resp, messages = imap.search(None, 'ALL')
+    messages = messages[0].split()
+    
+    # Find the phone numbers in each message
+    phone_numbers = []
+    for index in range(message_count):
+        phone_numbers += find_phone_numbers(imap, messages[index])
+    
+    imap.logout()
+    return phone_numbers
+
+
+@task()
 def find_phone_numbers(imap, number):
     print 'Processing message', number
     
@@ -66,39 +99,6 @@ def find_phone_numbers(imap, number):
         if len(str(raw_phone_number)) <= 7:
             continue
         phone_numbers.append({'value': phone_number, 'message': message})
-    return phone_numbers
-
-
-@task()
-def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
-    consumer = oauth.Consumer(consumer_key, consumer_secret)
-    token = oauth.Token(access_oauth_token, access_oauth_token_secret)
-    client = oauth.Client(consumer, token)
-    
-    # Get the email address from Google contacts
-    resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
-    email = parse_email(xmldoc)
-    
-    # Connect with IMAP
-    url = 'https://mail.google.com/mail/b/%s/imap/' % email
-    imap = imaplib.IMAP4_SSL('imap.googlemail.com')
-    imap.authenticate(url, consumer, token)
-    
-    # Get message count
-    resp, message_count = imap.select()
-    message_count = int(message_count[0])
-    print "Message count: %d" % message_count
-    
-    # Get messages
-    resp, messages = imap.search(None, 'ALL')
-    messages = messages[0].split()
-    
-    # Find the phone numbers in each message
-    phone_numbers = []
-    for index in range(message_count):
-        phone_numbers += find_phone_numbers(imap, messages[index])
-    
-    imap.logout()
     return phone_numbers
 
 
