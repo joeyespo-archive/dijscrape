@@ -10,11 +10,11 @@
         <ul>
             {% for phone_number in phone_numbers %}
             <li>
-                From: {{ phone_number['message']['sender'] }} ({{ phone_number['message']['sender_email'] }}) <br />
+                From: <a href="mailto:{{ phone_number['message']['sender_email'] }}">{{ phone_number['message']['sender'] }}</a> <br />
                 Subject: {{ phone_number['message']['subject'] }} <br />
                 Date: {{ phone_number['message']['date_add'] }} <br />
-                Phone Number: {{ phone_number['value'] }} <br />
-            </li>
+                Phone Number: <strong><a href="tel:{{ phone_number['formatted'] }}">{{ phone_number['formatted'] }}</a></strong> <br />
+            </li> <br />
             {% endfor %}
         </ul>
     </p>

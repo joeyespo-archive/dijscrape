@@ -23,7 +23,7 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
     
     # Get the email address from Google contacts
     resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
-    email = parse_email(xmldoc)
+    email = get_id(xmldoc)
     
     # Connect with IMAP
     url = 'https://mail.google.com/mail/b/%s/imap/' % email
@@ -50,24 +50,27 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
 
 @task()
 def find_phone_numbers(imap, number):
+    # TODO: Clean up debugging info
     print 'Processing message', number
     
     resp, message_data = imap.fetch(number, '(BODY.PEEK[HEADER])')
-    raw_message = message_data[0][1] # message_data, the data structure returned by imaplib, encodes some data re: the request type
+    raw_message = message_data[0][1]    # Encodes some data re: the request type
     header = HeaderParser().parsestr(raw_message)
+    # TODO: Handle multipart messages -- get_email_text
     # Check for multipart message
-    if 'multipart' in (header['Content-Type'] or []):
-        # TODO: Handle multipart messages
-        print 'Skipping multipart message'
-        return []
+    #if 'multipart' in (header['Content-Type'] or []):
+    #    print 'Skipping multipart message'
+    #    return []
     
     resp, message_data = imap.fetch(number, '(BODY.PEEK[TEXT])')
     text_payload = message_data[0][1]
     raw_phone_numbers = number_re.findall(text_payload) + number_re.findall(header['Subject'])
     # TODO: Make this more clear (flattens ['','650','555','1212'] to a string)
-    raw_phone_numbers = list(set(map(''.join, raw_phone_numbers)))
-    print "Phone numbers (%s): %s" % (len(raw_phone_numbers), raw_phone_numbers)
-    if len(raw_phone_numbers) == 0:
+    phone_numbers = list(set(map(''.join, raw_phone_numbers)))
+    # TODO: Handle numbers without area codes
+    phone_numbers = filter(lambda x: len(x) >= 7, phone_numbers)
+    print 'Phone numbers (%s): %s' % (len(phone_numbers), phone_numbers)
+    if len(phone_numbers) == 0:
         return []
     
     date_timestamp = header['Date']
@@ -83,6 +86,7 @@ def find_phone_numbers(imap, number):
         print format_exc()
         return []
     
+    # TODO: Use classes instead of dictionaries
     message = {
         'sender': header['From'],
         'recipient': header['To'],
@@ -92,26 +96,32 @@ def find_phone_numbers(imap, number):
         'date_add': date,
         'payload': text_payload,
     }
-    
+    phone_number_objects = []
+    for phone_number in phone_numbers:
+        phone_number_objects.append({'value': phone_number, 'formatted': format_phone_number(phone_number), 'message': message})
+    return phone_number_objects
+
+
+def format_phone_number(s):
     # TODO: Clean this up
-    for raw_phone_number in raw_phone_numbers:
-        # TODO: Handle numbers without area codes
-        if len(str(raw_phone_number)) <= 7:
-            continue
-        phone_numbers.append({'value': phone_number, 'message': message})
-    return phone_numbers
+    if len(s) == 7:
+        return '%s-%s' % (s[0:3], s[3:7])
+    elif len(s) == 10:
+        return '%s-%s-%s' % (s[0:3], s[3:6], s[6:10])
+    else:
+        return s
 
 
-def parse_email(xmldoc):
+def get_id(xmldoc):
     document = minidom.parseString(xmldoc)
     feedElement = document.firstChild
     for childNode in feedElement.childNodes:
         if childNode.localName == 'id':
-            return get_text(childNode)
+            return xml_get_text(childNode)
     return ''
 
 
-def get_text(node):
+def xml_get_text(node):
     rc = []
     for node in node.childNodes:
         if node.nodeType == node.TEXT_NODE:
