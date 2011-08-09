@@ -61,6 +61,8 @@ def find_phone_numbers(imap, number):
     #if 'multipart' in (header['Content-Type'] or []):
     #    print 'Skipping multipart message'
     #    return []
+    print header['Content-Type']
+    print
     
     resp, message_data = imap.fetch(number, '(BODY.PEEK[TEXT])')
     text_payload = message_data[0][1]

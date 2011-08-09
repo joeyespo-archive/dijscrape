@@ -5,7 +5,7 @@
 {% block content %}
 <article>
     {% if phone_numbers %}
-    <h1> Phone numbers found </h1>
+    <h1> Phone numbers found ({{ phone_numbers|length }}) </h1>
     <p>
         <ul>
             {% for phone_number in phone_numbers %}
