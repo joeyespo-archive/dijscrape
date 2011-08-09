@@ -70,7 +70,7 @@ def find_phone_numbers(imap, number):
     # TODO: Make this more clear (flattens ['','650','555','1212'] to a string)
     phone_numbers = list(set(map(''.join, raw_phone_numbers)))
     # TODO: Handle numbers without area codes
-    phone_numbers = filter(lambda x: len(x) >= 7, phone_numbers)
+    phone_numbers = filter(lambda x: len(x) >= 10, phone_numbers)
     print 'Phone numbers (%s): %s' % (len(phone_numbers), phone_numbers)
     if len(phone_numbers) == 0:
         return []
