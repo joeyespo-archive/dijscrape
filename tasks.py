@@ -59,21 +59,21 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
     # Performance info
     if performance_log_file:
         try:
-        performance_log_dir = os.path.dirname(performance_log_file)
-        if not os.path.exists(performance_log_dir):
-            os.mkdir(performance_log_dir)
-        with FileLock(performance_log_file):
-            skip_header = os.path.exists(performance_log_file)
-            f = open(performance_log_file, 'a')
-            writer = csv.writer(f)
-            if not skip_header:
-                writer.writerow(['Email Count', 'Phone Number Count', 'Start Time', 'End Time'])
-            writer.writerow([message_count, len(phone_numbers), start_time, end_time])
-            f.close()
+            performance_log_dir = os.path.dirname(performance_log_file)
+            if not os.path.exists(performance_log_dir):
+                os.mkdir(performance_log_dir)
+            with FileLock(performance_log_file):
+                skip_header = os.path.exists(performance_log_file)
+                f = open(performance_log_file, 'a')
+                writer = csv.writer(f)
+                if not skip_header:
+                    writer.writerow(['Email Count', 'Phone Number Count', 'Start Time', 'End Time'])
+                writer.writerow([message_count, len(phone_numbers), start_time, end_time])
+                f.close()
         except:
+            print 'Error: could not log performance.'
             from traceback import format_exc
             print format_exc()
-            return []
     
     return phone_numbers
 
