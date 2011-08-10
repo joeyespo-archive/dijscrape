@@ -71,9 +71,9 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
             writer.writerow([message_count, len(phone_numbers), start_time, end_time])
             f.close()
         except:
+            print 'Error: could not log performance.'
             from traceback import format_exc
             print format_exc()
-            return []
     
     return phone_numbers
 
