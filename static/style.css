@@ -1,5 +1,6 @@
 @charset "utf-8";
 
+/* Base styles */
 body {
     background: #cef url('background.png') 50% 0 repeat-y;
     font-family: 'Arial' 'Verdana';
@@ -39,24 +40,78 @@ h1 {
     color: #333;
     font-weight: bold;
 }
-
-.main {
+.content {
     padding: 0;
-    margin: 24px 0 0;
 }
-.main h1 {
+.content h1 {
     font-size: 1.5em;
     color: #222;
+}
+.content-end {
+    clear: both;
+}
+* html .content-end {
+    height:1px;
+}
+
+
+
+/* Tablesorter */
+table.tablesorter {
+    font-family: arial;
+    background-color: #CDCDCD;
+    margin: 10px 0pt 15px;
+    font-size: 8pt;
+    width: 100%;
+    text-align: left;
+}
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+    background-color: #e6EEEE;
+    border: 1px solid #FFF;
+    font-size: 8pt;
+    padding: 4px;
+}
+table.tablesorter thead tr .header {
+    background-image: url('bg.gif');
+    background-repeat: no-repeat;
+    background-position: center right;
+    cursor: pointer;
+}
+table.tablesorter tbody td {
+    color: #3D3D3D;
+    padding: 4px;
+    background-color: #FFF;
+    vertical-align: top;
+}
+table.tablesorter tbody tr.odd td {
+    background-color:#F0F0F6;
+}
+table.tablesorter thead tr .headerSortUp {
+    background-image: url('asc.gif');
+}
+table.tablesorter thead tr .headerSortDown {
+    background-image: url('desc.gif');
+}
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+    background-color: #8dbdd8;
+}
+
+
+
+/* Landing page styles */
+.intro {
+    padding: 0;
+    margin: 0 0 24px;
 }
 
 .trial {
     float: left;
-    width: 42%;
+    width: 40%;
     padding-left: 4%;
 }
 .signup {
     float: right;
-    width: 46%;
+    width: 48%;
     border-left: 1px dotted #ddd;
     padding-left: 4%;
 }
@@ -64,9 +119,33 @@ h1 {
     margin: 0;
 }
 
-.end-main {
-    clear: both;
+
+
+/* Results styles */
+.results {
+    width: 100%;
 }
-* html .end-main {
-    height:1px;
+.results td {
+    min-width: 80px;
+}
+.phone_number_value {
+    font-weight: bold;
+}
+.results textarea {
+    font-family: 'Arial' 'Verdana';
+    font-size: 8pt;
+    margin: 0;
+    padding: 3px;
+    border-color: #aaa;
+    border-style: solid;
+    border-width: thin;
+    width: 92%;
+    height: 5em;
+    outline: none;
+    resize: vertical;
+}
+
+.feedback {
+    border-top: 1px solid #ddd;
+    margin: 24px auto 0;
 }

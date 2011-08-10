@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="{{ url_for('.static', filename='favicon.ico') }}" />
     <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-    {% block additionalscripts %}{% endblock %}
+    {% block priorityscripts %}{% endblock %}
 </head>
 <body>
     <div class="page">
@@ -35,5 +35,6 @@
         </footer>
         
     </div>
+{% block additionalscripts %}{% endblock %}
 </body>
 </html>
