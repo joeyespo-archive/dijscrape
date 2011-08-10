@@ -6,8 +6,15 @@ body {
 
 .page {
     background-color: white;
-    width: 500px;
+    width: 800px;
     margin: 20px auto 0px auto;
     padding: 30px;
     border: 1px solid gray;
+}
+
+#github-banner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
 }

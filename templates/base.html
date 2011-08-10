@@ -7,7 +7,7 @@
     {% block additionalstyles %}{% endblock %}
     <link rel="shortcut icon" href="{{ url_for('.static', filename='favicon.ico') }}" />
     <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     {% block additionalscripts %}{% endblock %}
 </head>
 <body>
@@ -15,6 +15,10 @@
         <header>
             <h1>DijScrape</h1>
         </header>
+        
+        <aside>
+            <a href="http://github.com/joeyespo/dijscrape"><img id="github-banner" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"/></a>
+        </aside>
         
         {% for message in get_flashed_messages() %}
         <div class="messages">
@@ -29,6 +33,7 @@
         <section class="footer">
             {% block footer %}<!-- TODO: Copyright? -->{% endblock %}
         </section>
+        
     </div>
 </body>
 </html>
