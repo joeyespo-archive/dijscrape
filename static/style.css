@@ -1,15 +1,27 @@
 @charset "utf-8";
 
 body {
-    background-color: #CEF;
+    background: #cef url('background.png') 50% 0 repeat-y;
+    font-family: 'Arial' 'Verdana';
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-size: 2em;
+    color: #222;
 }
 
 .page {
     background-color: white;
+    color: #333;
     width: 800px;
-    margin: 20px auto 0px auto;
+    margin: 24px auto 24px auto;
     padding: 30px;
-    border: 1px solid gray;
+    border: 1px solid #9cd;
+    -moz-box-shadow: 0 0 24px 2px #8bc;
+    -webkit-box-shadow: 0 0 24px 2px #8bc;
+    box-shadow: 0 0 24px 2px #8bc;
 }
 
 #github-banner {
@@ -21,9 +33,40 @@ body {
 
 .flashed-messages {
     border: 1px dotted #888;
-    background-color: #FFE;
+    background-color: #ffe;
     margin: 0 0 24px 0;
     padding: 0 24px;
     color: #333;
     font-weight: bold;
+}
+
+.main {
+    padding: 0;
+    margin: 24px 0 0;
+}
+.main h1 {
+    font-size: 1.5em;
+    color: #222;
+}
+
+.trial {
+    float: left;
+    width: 42%;
+    padding-left: 4%;
+}
+.signup {
+    float: right;
+    width: 46%;
+    border-left: 1px dotted #ddd;
+    padding-left: 4%;
+}
+.trial h1, .signup h1 {
+    margin: 0;
+}
+
+.end-main {
+    clear: both;
+}
+* html .end-main {
+    height:1px;
 }

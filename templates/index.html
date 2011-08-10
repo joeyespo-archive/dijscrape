@@ -1,13 +1,33 @@
 {% extends "base.html" %}
 
 {% block title %}Create a contact list from phone numbers in your email{% endblock %}
+{% block additionalscripts %}
+<script>var host = (("https:" == document.location.protocol) ? "https://secure." : "http://");document.write(unescape("%3Cscript src='" + host + "wufoo.com/scripts/embed/form.js' type='text/javascript'%3E%3C/script%3E"));</script>
+{% endblock %}
 
 {% block content %}
-<article>
-    <h1> Login </h1>
-    <form action="/login" method="GET">
-        <p> Safely scan through your messages for phone numbers by loging in below. </p>
-        <p> <input type="image" src="{{ url_for('.static', filename='login-with-google-button.png') }}" alt="Submit" /> </p>
-    </form>
-</article>
+<div class="content">
+    <section id="intro">
+        <p> DijScrape is a web app that will scan your inbox for phone numbers and present them to you. </p>
+    </section>
+    
+    <div class="main">
+        <article class="trial">
+            <h1>Try it out</h1>
+            <form action="/login" method="GET">
+                <p> Reveal the phone numbers buried in your inbox by logging in with Google below. </p>
+                <p> <input type="image" src="{{ url_for('.static', filename='login-with-google-button.png') }}" alt="Submit" /> </p>
+            </form>
+        </article>
+        
+        <article class="signup">
+            <h1>Like what you see?</h1>
+            <section>
+                <script>var p7x2s9 = new WufooForm(); p7x2s9.initialize({'userName':'awesomenessreminders', 'formHash':'p7x2s9', 'autoResize':true,'height':'434', 'header':'show', 'ssl':true}); p7x2s9.display();</script>
+            </section>
+        </article>
+        
+        <div class="end-main"></div>
+    </div>
+</div>
 {% endblock %}
