@@ -99,13 +99,18 @@ def find_phone_numbers(imap, number):
 
 
 def format_phone_number(s):
+    prefix = ''
+    if s.startswith('+'):
+        prefix = s[0]
+        s = s[1:]
     # TODO: Clean this up
     if len(s) == 7:
-        return '%s-%s' % (s[0:3], s[3:7])
+        formatted = '%s-%s' % (s[0:3], s[3:7])
     elif len(s) == 10:
-        return '%s-%s-%s' % (s[0:3], s[3:6], s[6:10])
+        formatted = '%s-%s-%s' % (s[0:3], s[3:6], s[6:10])
     else:
-        return s
+        formatted = s
+    return prefix + formatted
 
 
 def get_id(xmldoc):
