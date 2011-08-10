@@ -43,7 +43,7 @@
                 <td>{{ phone_number['message']['sender_name'] }}</td>
                 <td><a href="mailto:{{ phone_number['message']['sender_email'] }}">{{ phone_number['message']['sender_email'] }}</a></td>
                 <td><a class="phone_number_value" href="tel:{{ phone_number['formatted_value'] }}">{{ phone_number['formatted_value'] }}</a></td>
-                <td><textarea>{{ phone_number['message']['content']|truncate }}</textarea></td>
+                <td><textarea>{{ phone_number['message']['content'] }}</textarea></td>
             </tr>
             {% endfor %}
             </tbody>
