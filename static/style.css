@@ -18,3 +18,12 @@ body {
     right: 0;
     border: 0;
 }
+
+.flashed-messages {
+    border: 1px dotted #888;
+    background-color: #FFE;
+    margin: 0 0 24px 0;
+    padding: 0 24px;
+    color: #333;
+    font-weight: bold;
+}

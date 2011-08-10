@@ -20,19 +20,19 @@
             <a href="http://github.com/joeyespo/dijscrape"><img id="github-banner" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"/></a>
         </aside>
         
-        {% for message in get_flashed_messages() %}
-        <div class="messages">
-            <p class="message">{{ message }}</p>
-        </div>
-        {% endfor %}
-        
         <div class="content">
+            {% for message in get_flashed_messages() %}
+            <div class="flashed-messages">
+                <p class="flashed-message">{{ message }}</p>
+            </div>
+            {% endfor %}
+            
             {% block content %}{% endblock %}
         </div>
         
-        <section class="footer">
+        <footer>
             {% block footer %}<!-- TODO: Copyright? -->{% endblock %}
-        </section>
+        </footer>
         
     </div>
 </body>
