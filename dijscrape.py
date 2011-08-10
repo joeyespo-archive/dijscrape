@@ -50,7 +50,7 @@ def oauth_authorized():
 def oauth_scraper():
     access_oauth_token, access_oauth_token_secret = session['access_token']['oauth_token'], session['access_token']['oauth_token_secret']
     consumer_key, consumer_secret = app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET']
-    result = scrape_gmail_messages.delay(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret)
+    result = scrape_gmail_messages.delay(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, app.config['PERFORMANCE_LOG_FILE'])
     # TODO: return render_template('processing.html')
     phone_numbers = result.get()
     return render_template('results.html', phone_numbers=phone_numbers)

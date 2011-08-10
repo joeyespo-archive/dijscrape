@@ -140,7 +140,7 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
     border-style: solid;
     border-width: thin;
     width: 92%;
-    height: 5em;
+    height: 7em;
     outline: none;
     resize: vertical;
 }
