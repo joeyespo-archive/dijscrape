@@ -101,17 +101,17 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 /* Landing page styles */
 .intro {
     padding: 0;
-    margin: 0 0 24px;
+    margin: 0 0 44px;
 }
 
 .trial {
     float: left;
-    width: 40%;
+    width: 38%;
     padding-left: 4%;
 }
 .signup {
     float: right;
-    width: 48%;
+    width: 52%;
     border-left: 1px dotted #ddd;
     padding-left: 4%;
 }
