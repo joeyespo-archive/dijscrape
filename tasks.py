@@ -1,10 +1,12 @@
-import sys, os
-import csv, re, datetime, dateutil, time
+import sys
+import re
+import time
+import dateutil
+import logging
+import xml.dom.minidom
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
 from email import message_from_string
-from xml.dom import minidom
-from lockfile import FileLock
 from celery.decorators import task
 
 # TODO: Handle bad resp values and exceptions
@@ -15,8 +17,8 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 
 
 @task()
-def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, performance_log_file=None):
-    start_time = time.strftime('%X %x %Z')
+def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+    start_time = time.strftime('%m/%d/%Y %I:%M:%S %p')
     
     consumer = oauth.Consumer(consumer_key, consumer_secret)
     token = oauth.Token(access_oauth_token, access_oauth_token_secret)
@@ -46,34 +48,16 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
         phone_numbers += find_phone_numbers(imap, messages[index])
     
     imap.logout()
-    end_time = time.strftime('%X %x %Z')
+    end_time = time.strftime('%m/%d/%Y %I:%M:%S %p')
     
-    # Debug info
+    # Show performance
     print
     print 'Finished processing:', email
     print 'Emails:', message_count
     print 'Phone Numbers:', len(phone_numbers)
     print 'Start:', start_time
     print 'End:', end_time
-    
-    # Performance info
-    if performance_log_file:
-        try:
-            performance_log_dir = os.path.dirname(performance_log_file)
-            if not os.path.exists(performance_log_dir):
-                os.mkdir(performance_log_dir)
-            with FileLock(performance_log_file):
-                skip_header = os.path.exists(performance_log_file)
-                f = open(performance_log_file, 'a')
-                writer = csv.writer(f)
-                if not skip_header:
-                    writer.writerow(['Email Count', 'Phone Number Count', 'Start Time', 'End Time'])
-                writer.writerow([message_count, len(phone_numbers), start_time, end_time])
-                f.close()
-        except:
-            print 'Error: could not log performance.'
-            from traceback import format_exc
-            print format_exc()
+    logging.info('Mailbox Processed: Emails = %s, Phone Numbers = %s, Start = %s, End = %s' % (message_count, len(phone_numbers), start_time, end_time))
     
     return phone_numbers
 
@@ -149,7 +133,7 @@ def format_phone_number(s):
 
 
 def get_id(xmldoc):
-    document = minidom.parseString(xmldoc)
+    document = xml.dom.minidom.parseString(xmldoc)
     feedElement = document.firstChild
     for childNode in feedElement.childNodes:
         if childNode.localName == 'id':

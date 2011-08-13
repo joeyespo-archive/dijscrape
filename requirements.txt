@@ -1,4 +1,3 @@
 celery
 oauth2
-lockfile
 flask

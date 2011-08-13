@@ -15,7 +15,8 @@ class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
     DATABASE_URI = ''
-    PERFORMANCE_LOG_FILE = None
+    LOG_FILE = None
+    LOG_LEVEL = 'INFO'
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken?scope=https://mail.google.com/+https://www.google.com/m8/feeds/'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
@@ -29,6 +30,7 @@ class DevelopmentConfig(BaseConfig):
     DEV_PORT = 5000
     DEBUG = True
     DATABASE_URI = 'sqlite://:memory:'
+    LOG_LEVEL = 'DEBUG'
     APP_SECRET_KEY = 'development-key'
 
 class ProductionConfig(BaseConfig):
