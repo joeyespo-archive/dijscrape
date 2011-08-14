@@ -2,16 +2,29 @@
 
 {% block title %}Phone numbers found{% endblock %}
 {% block additionalstyles %}
-<link rel="stylesheet" href="{{ url_for('.static', filename='lib/jquery.tablesorter.css') }}" />
+<link rel="stylesheet" href="{{ url_for('.static', filename='lib/tablesorter/tablesorter.css') }}" />
+<link rel="stylesheet" href="{{ url_for('.static', filename='lib/colorbox/colorbox.css') }}" />
 {% endblock %}
 {% block priorityscripts %}
 <script>var host = (("https:" == document.location.protocol) ? "https://secure." : "http://");document.write(unescape("%3Cscript src='" + host + "wufoo.com/scripts/embed/form.js' type='text/javascript'%3E%3C/script%3E"));</script>
 {% endblock %}
 {% block additionalscripts %}
-<script src="{{ url_for('.static', filename='lib/jquery.tablesorter.min.js') }}"></script>
+<script src="{{ url_for('.static', filename='lib/tablesorter/jquery.tablesorter.min.js') }}"></script>
+<script src="{{ url_for('.static', filename='lib/colorbox/jquery.colorbox.min.js') }}"></script>
 <script>
     $(document).ready(function() {
         $(".results-table").tablesorter({sortList:[[0,0]], widgets: ['zebra']});
+        
+        $(".results-table tr").hover(
+            function () {
+                $(this).addClass("hover");
+            },
+            function () {
+                $(this).removeClass("hover");
+            });
+        {% for phone_number in phone_numbers %}
+        $("#partial-context-{{ loop.index }}").colorbox({width:"50%", inline:true, href:"#full-context-{{ loop.index }}"});
+        {% endfor %}
     });
 </script>
 {% endblock %}
@@ -34,20 +47,29 @@
                 <th>Name</th>
                 <th>From</th>
                 <th>Phone Number</th>
-                <th>Context</th>
+                <th>Context (click on a row for the full context)</th>
             </tr>
             </thead>
             <tbody>
             {% for phone_number in phone_numbers %}
-            <tr>
+            <tr id="partial-context-{{ loop.index }}">
                 <td>{{ phone_number['message']['sender_name'] }}</td>
                 <td><a href="mailto:{{ phone_number['message']['sender_email'] }}">{{ phone_number['message']['sender_email'] }}</a></td>
-                <td><a class="phone_number" href="tel:{{ phone_number['formatted_value'] }}">{{ phone_number['formatted_value'] }}</a></td>
-                <td><div class="context">{{ phone_number['message']['content'] }}</div></td>
+                <td><a class="phone-number" href="tel:{{ phone_number['formatted_value'] }}">{{ phone_number['formatted_value'] }}</a></td>
+                <td><div class="partial-context">{{ phone_number['message']['content']|truncate(250) }}</div></td>
             </tr>
             {% endfor %}
             </tbody>
             </table>
+            
+            <div class="full-context-container">
+                {% for phone_number in phone_numbers %}
+                <div id="full-context-{{ loop.index }}">
+                    <h1>Full Context</h1>
+                    <p class="full-context">{{ phone_number['message']['content'] }}</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
         

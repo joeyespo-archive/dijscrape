@@ -2,11 +2,13 @@
 docs/*
 env/*
 logs/*
+instance/*
 local_config.py
 config_dev.py
 config_prod.py
-# Celery is external config
 celeryconfig.py
+.epio-app
+epio.ini
 
 # Python bytecode files
 *.pyc
