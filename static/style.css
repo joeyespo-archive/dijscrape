@@ -56,48 +56,6 @@ h1 {
 
 
 
-/* Tablesorter */
-table.tablesorter {
-    font-family: arial;
-    background-color: #CDCDCD;
-    margin: 10px 0pt 15px;
-    font-size: 8pt;
-    width: 100%;
-    text-align: left;
-}
-table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-    background-color: #e6EEEE;
-    border: 1px solid #FFF;
-    font-size: 8pt;
-    padding: 4px;
-}
-table.tablesorter thead tr .header {
-    background-image: url('bg.gif');
-    background-repeat: no-repeat;
-    background-position: center right;
-    cursor: pointer;
-}
-table.tablesorter tbody td {
-    color: #3D3D3D;
-    padding: 4px;
-    background-color: #FFF;
-    vertical-align: top;
-}
-table.tablesorter tbody tr.odd td {
-    background-color:#F0F0F6;
-}
-table.tablesorter thead tr .headerSortUp {
-    background-image: url('asc.gif');
-}
-table.tablesorter thead tr .headerSortDown {
-    background-image: url('desc.gif');
-}
-table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
-    background-color: #8dbdd8;
-}
-
-
-
 /* Landing page styles */
 .intro {
     padding: 0;
@@ -126,23 +84,19 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
     width: 100%;
 }
 .results td {
-    min-width: 80px;
+    min-width: 120px;
 }
-.phone_number_value {
+.results .phone_number {
     font-weight: bold;
 }
-.results textarea {
-    font-family: 'Arial' 'Verdana';
+.results .context {
+    font-family: 'Arial', 'Verdana', sans-serif;
     font-size: 8pt;
     margin: 0;
-    padding: 3px;
-    border-color: #aaa;
-    border-style: solid;
-    border-width: thin;
-    width: 92%;
-    height: 7em;
+    padding: 4px;
+    height: 5em;
     outline: none;
-    resize: vertical;
+    overflow: auto;
 }
 
 .feedback {

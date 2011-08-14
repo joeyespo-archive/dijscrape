@@ -79,10 +79,10 @@ def find_phone_numbers(imap, number):
             content += '\n' + part.get_payload()
     
     # Find the phone numbers
+    # TODO: Use finditer to get the MatchObject instances for highlighting the matched numbers in the results
     raw_phone_numbers = number_re.findall(content) + number_re.findall(msg['Subject'])
-    # TODO: Make this more clear (flattens ['','650','555','1212'] to a string)
+    # TODO: Make this more clear (flattens ['','650','555','1212'] to a string) then accept only numbers with ten or more digits
     phone_numbers = list(set(map(''.join, raw_phone_numbers)))
-    # TODO: Handle numbers without area codes
     phone_numbers = filter(lambda x: len(x) >= 10, phone_numbers)
     print 'Phone numbers (%s): %s' % (len(phone_numbers), phone_numbers)
     if len(phone_numbers) == 0:

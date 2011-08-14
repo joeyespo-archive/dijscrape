@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Phone numbers found{% endblock %}
+{% block additionalstyles %}
+<link rel="stylesheet" href="{{ url_for('.static', filename='lib/jquery.tablesorter.css') }}" />
+{% endblock %}
 {% block priorityscripts %}
 <script>var host = (("https:" == document.location.protocol) ? "https://secure." : "http://");document.write(unescape("%3Cscript src='" + host + "wufoo.com/scripts/embed/form.js' type='text/javascript'%3E%3C/script%3E"));</script>
 {% endblock %}
-
 {% block additionalscripts %}
-<script src="{{ url_for('.static', filename='jquery.tablesorter.min.js') }}"></script>
-<script src="{{ url_for('.static', filename='results-helper.js') }}"></script>
+<script src="{{ url_for('.static', filename='lib/jquery.tablesorter.min.js') }}"></script>
 <script>
     $(document).ready(function() {
-            $(".results-table").tablesorter({sortList:[[0,0]], widgets: ['zebra']});
-        }
-    );
+        $(".results-table").tablesorter({sortList:[[0,0]], widgets: ['zebra']});
+    });
 </script>
 {% endblock %}
 
@@ -42,8 +42,8 @@
             <tr>
                 <td>{{ phone_number['message']['sender_name'] }}</td>
                 <td><a href="mailto:{{ phone_number['message']['sender_email'] }}">{{ phone_number['message']['sender_email'] }}</a></td>
-                <td><a class="phone_number_value" href="tel:{{ phone_number['formatted_value'] }}">{{ phone_number['formatted_value'] }}</a></td>
-                <td><textarea>{{ phone_number['message']['content'] }}</textarea></td>
+                <td><a class="phone_number" href="tel:{{ phone_number['formatted_value'] }}">{{ phone_number['formatted_value'] }}</a></td>
+                <td><div class="context">{{ phone_number['message']['content'] }}</div></td>
             </tr>
             {% endfor %}
             </tbody>
