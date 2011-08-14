@@ -55,11 +55,11 @@ def oauth_authorized():
         # TODO: Show better error
         abort(502, 'Invalid response from Google.')
     session['access_token'] = dict(cgi.parse_qsl(content))
-    return redirect(url_for('oauth_scraper'))
+    return redirect(url_for('scraper'))
 
 
-@app.route('/oauth-scraper')
-def oauth_scraper():
+@app.route('/scraper')
+def scraper():
     access_oauth_token, access_oauth_token_secret = session['access_token']['oauth_token'], session['access_token']['oauth_token_secret']
     consumer_key, consumer_secret = app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET']
     result = scrape_gmail_messages.delay(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret   )
