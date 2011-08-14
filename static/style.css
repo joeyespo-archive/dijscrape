@@ -1,5 +1,6 @@
 @charset "utf-8";
 
+
 /* Base styles */
 body {
     background: #cef url('background.png') 50% 0 repeat-y;
@@ -55,7 +56,6 @@ h1 {
 }
 
 
-
 /* Landing page styles */
 .intro {
     padding: 0;
@@ -78,7 +78,6 @@ h1 {
 }
 
 
-
 /* Results styles */
 .results {
     width: 100%;
@@ -95,7 +94,8 @@ h1 {
 }
 .results .partial-context {
     font-family: 'Arial', 'Verdana', sans-serif;
-    height: 5em;
+    min-height: 3em;
+    max-height: 5em;
     overflow: hidden;
 }
 .results .full-context-container {
