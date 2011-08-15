@@ -64,9 +64,9 @@
             
             <div class="full-context-container">
                 {% for phone_number in phone_numbers %}
-                <div id="full-context-{{ loop.index }}">
+                <div id="full-context-{{ loop.index }}" class="full-context">
                     <h1>Full Context</h1>
-                    <p class="full-context">{{ phone_number['message']['content'] }}</p>
+                    <p>{{ phone_number['message']['content'] }}</p>
                 </div>
                 {% endfor %}
             </div>
