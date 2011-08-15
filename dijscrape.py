@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import os
 import cgi
-import logging
 import oauth2 as oauth
 from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
 from tasks import scrape_gmail_messages
@@ -13,17 +11,6 @@ config_class_name = 'Development' if __name__ == '__main__' else 'Production'
 app = Flask(__name__)
 app.config.from_object('config.%sConfig' % config_class_name)
 app.secret_key = app.config['APP_SECRET_KEY']
-# Init logging
-log_file = os.path.join(os.path.dirname(__file__), app.config['LOG_FILE']) if app.config['LOG_FILE'] else None
-log_level = app.config['LOG_LEVEL']
-if log_file and log_level:
-    if not os.path.exists(log_file):
-        logdir = os.path.dirname(log_file)
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-        open(log_file, 'w').close()
-if log_level:
-    logging.basicConfig(filename=log_file, format='%(message)s', level=log_level)
 # Init OAuth
 consumer = oauth.Consumer(app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
 client = oauth.Client(consumer)
@@ -52,7 +39,6 @@ def oauth_authorized():
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'])
     # TODO: Handle 'Deny access' (status 400)
     if resp['status'] != '200':
-        # TODO: Show better error
         abort(502, 'Invalid response from Google.')
     session['access_token'] = dict(cgi.parse_qsl(content))
     return redirect(url_for('scrape'))
@@ -66,6 +52,29 @@ def scrape():
     # TODO: return render_template('processing.html')
     phone_numbers = result.get()
     return render_template('results.html', phone_numbers=phone_numbers)
+
+@app.route('/performance')
+def performance():
+    try:
+        from bundle_config import config
+    except:
+        return 'Nothing to report.'
+    try:
+        if 'postgres' not in config:
+            return 'Error: Expected bundle_config.config to include postgres settings but they are missing.'
+        import psycopg2
+        conn = psycopg2.connect(host = config['postgres']['host'], port = int(config['postgres']['port']), user = config['postgres']['username'], password = config['postgres']['password'], database = config['postgres']['database'])
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM processed;')
+        entries_string = ''
+        for entry in cur.fetchall():
+            entries_string += str(entry) + '\n'
+        cur.close()
+        conn.close()
+        return entries_string
+    except:
+        from traceback import format_exc
+        return 'Error: could not get performance log.\n\n' + str(format_exc())
         
 
 # Error handlers

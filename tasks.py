@@ -1,13 +1,19 @@
-import sys
 import re
 import time
 import dateutil
-import logging
+import psycopg2
 import xml.dom.minidom
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
+from datetime import datetime
 from email import message_from_string
 from celery.decorators import task
+try:
+    from bundle_config import config
+except:
+    config = None
+if config and 'postgres' not in config:
+    print '***WARNING*** Expected bundle_config.config to include postgres settings but they are missing.'
 
 # TODO: Handle bad resp values and exceptions
 
@@ -18,48 +24,76 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 
 @task()
 def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
-    start_time = time.strftime('%m/%d/%Y %I:%M:%S %p')
-    
-    consumer = oauth.Consumer(consumer_key, consumer_secret)
-    token = oauth.Token(access_oauth_token, access_oauth_token_secret)
-    client = oauth.Client(consumer, token)
-    
-    # Get the email address from Google contacts
-    resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
-    email = get_id(xmldoc)
-    
-    # Connect with IMAP
-    url = 'https://mail.google.com/mail/b/%s/imap/' % email
-    imap = imaplib.IMAP4_SSL('imap.googlemail.com')
-    imap.authenticate(url, consumer, token)
-    
-    # Get message count
-    resp, message_count = imap.select()
-    message_count = int(message_count[0])
-    print "Message count: %d" % message_count
-    
-    # Get messages
-    resp, messages = imap.search(None, 'ALL')
-    messages = messages[0].split()
-    
-    # Find the phone numbers in each message
-    phone_numbers = []
-    for index in range(message_count):
-        phone_numbers += find_phone_numbers(imap, messages[index])
-    
-    imap.logout()
-    end_time = time.strftime('%m/%d/%Y %I:%M:%S %p')
-    
-    # Show performance
-    print
-    print 'Finished processing:', email
-    print 'Emails:', message_count
-    print 'Phone Numbers:', len(phone_numbers)
-    print 'Start:', start_time
-    print 'End:', end_time
-    logging.info('Mailbox Processed: Emails = %s, Phone Numbers = %s, Start = %s, End = %s' % (message_count, len(phone_numbers), start_time, end_time))
-    
-    return phone_numbers
+    try:
+        start_datetime = datetime.now()
+        
+        consumer = oauth.Consumer(consumer_key, consumer_secret)
+        token = oauth.Token(access_oauth_token, access_oauth_token_secret)
+        client = oauth.Client(consumer, token)
+        
+        # Get the email address from Google contacts
+        resp, xmldoc = client.request('https://www.google.com/m8/feeds/contacts/default/full?max-results=0')
+        email = get_id(xmldoc)
+        
+        # Connect with IMAP
+        url = 'https://mail.google.com/mail/b/%s/imap/' % email
+        imap = imaplib.IMAP4_SSL('imap.googlemail.com')
+        imap.authenticate(url, consumer, token)
+        
+        # Get message count
+        # TODO: imap.select('[Gmail]/All Mail')
+        resp, message_count = imap.select()
+        message_count = int(message_count[0])
+        print "Message count: %d" % message_count
+        
+        # Get messages
+        resp, messages = imap.search(None, 'ALL')
+        messages = messages[0].split()
+        
+        # Find the phone numbers in each message
+        phone_numbers = []
+        for index in range(message_count):
+            phone_numbers += find_phone_numbers(imap, messages[index])
+        
+        imap.logout()
+        end_datetime = datetime.now()
+        
+        # Log the process and its performance
+        if config:
+            try:
+                conn = psycopg2.connect(
+                    host = config['postgres']['host'],
+                    port = int(config['postgres']['port']),
+                    user = config['postgres']['username'],
+                    password = config['postgres']['password'],
+                    database = config['postgres']['database'],
+                )
+                cur = conn.cursor()
+                try:
+                    cur.execute("INSERT INTO processed (email, message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (email, message_count, len(phone_numbers), start_datetime, end_datetime))
+                except psycopg2.ProgrammingError:
+                    # Error, reset the connection
+                    conn.rollback()
+                    # Add table and retry
+                    cur.execute("CREATE TABLE processed (email varchar, message_count integer, phone_number_count integer, start_time timestamp, end_time timestamp);")
+                    cur.execute("INSERT INTO processed (email, message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (email, message_count, len(phone_numbers), start_datetime, end_datetime))
+                    print 'Database table "processed" created.'
+                conn.commit()
+                cur.close()
+            except:
+                print 'Error: could not log performance.'
+                from traceback import format_exc
+                print format_exc()
+            finally:
+                conn.close()
+        else:
+            print 'Processed %s: Emails = %s, Phone Numbers = %s, Start = %s, End = %s' % (email, message_count, len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
+        
+        return phone_numbers
+    except:
+        from traceback import format_exc
+        print format_exc()
+        return phone_numbers
 
 
 @task()

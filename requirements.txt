@@ -1,3 +1,4 @@
 celery
 oauth2
+psycopg2
 flask
