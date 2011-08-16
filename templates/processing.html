@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Finding phone numbers{% endblock %}
+{% block additionalscripts %}
+<script src="{{ url_for('.static', filename='lib/timers/jquery.timers-1.2.js') }}"></script>
+<script>
+    function poll_task() {
+        $.get("poll-task/{{ task_id }}", function(data) {
+            if(data == 'True')
+                window.location.replace("results");
+            if(data != 'False' && data != 'None')
+                $('#progress').val('(' + data + ')');
+        });
+    }
+    $(document).everyTime(3000, poll_task);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <article>
+        <h1>Finding phone numbers</h1>
+        <p>
+            Processing message. Please wait. <span id="progress"></span>
+        </p>
+    </article>
+</div>
+<div class="content-end"></div>
+{% endblock %}

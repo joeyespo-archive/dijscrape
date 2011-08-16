@@ -24,6 +24,7 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 
 @task()
 def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+    phone_numbers = []
     try:
         start_datetime = datetime.now()
         
@@ -40,20 +41,19 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
         imap = imaplib.IMAP4_SSL('imap.googlemail.com')
         imap.authenticate(url, consumer, token)
         
-        # Get message count
+        # Get messages and message count
         # TODO: imap.select('[Gmail]/All Mail')
-        resp, message_count = imap.select()
+        resp, message_count = imap.select('[Gmail]/All Mail')
         message_count = int(message_count[0])
         print "Message count: %d" % message_count
-        
-        # Get messages
         resp, messages = imap.search(None, 'ALL')
         messages = messages[0].split()
+        scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": 0, "total": message_count})
         
         # Find the phone numbers in each message
-        phone_numbers = []
         for index in range(message_count):
             phone_numbers += find_phone_numbers(imap, messages[index])
+            scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
         
         imap.logout()
         end_datetime = datetime.now()
@@ -70,13 +70,13 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
                 )
                 cur = conn.cursor()
                 try:
-                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
                 except psycopg2.ProgrammingError:
                     # Error, reset the connection
                     conn.rollback()
                     # Add table and retry
                     cur.execute("CREATE TABLE processed (message_count integer, phone_number_count integer, start_time timestamp, end_time timestamp);")
-                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
                     print 'Database table "processed" created.'
                 conn.commit()
                 cur.close()

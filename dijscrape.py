@@ -22,14 +22,16 @@ client = oauth.Client(consumer)
 # Views
 @app.route('/')
 def index():
+    # Check for active task
     return render_template('index.html')
 
 
 @app.route('/login')
 def login():
+    # TODO: Check for active task
     resp, content = client.request(app.config['OAUTH_REQUEST_TOKEN_URL'])
     if resp['status'] != '200':
-        abort(502, 'Invalid response from Google.')
+        abort(502, 'Invalid response from Google. Please try again later.')
     session['request_token'] = dict(cgi.parse_qsl(content))
     return redirect('%s?oauth_token=%s&oauth_callback=http://%s%s'
         % (app.config['OAUTH_AUTHORIZATION_URL'], session['request_token']['oauth_token'], request.host, url_for('oauth_authorized')))
@@ -42,19 +44,61 @@ def oauth_authorized():
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'])
     # TODO: Handle 'Deny access' (status 400)
     if resp['status'] != '200':
-        abort(502, 'Invalid response from Google.')
+        abort(502, 'Invalid response from Google. Please try again later.')
     session['access_token'] = dict(cgi.parse_qsl(content))
-    return redirect(url_for('scrape'))
+    # Skip to results when debugging
+    if app.config['DEBUG']:
+        return redirect(url_for('results'))
+    # Start the task with the oauth and google keys
+    result = scrape_gmail_messages.delay(session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+    # Save the task ID and redirect to the processing page
+    print 'Task started:', result.task_id
+    session['task_id'] = result.task_id
+    return redirect(url_for('processing'))
 
 
-@app.route('/scrape')
-def scrape():
-    access_oauth_token, access_oauth_token_secret = session['access_token']['oauth_token'], session['access_token']['oauth_token_secret']
-    consumer_key, consumer_secret = app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET']
-    result = scrape_gmail_messages.delay(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret   )
-    # TODO: return render_template('processing.html')
-    phone_numbers = result.get()
+@app.route('/processing')
+def processing():
+    # Check whether we're still processing in case there's a hard refresh
+    task_id = session.get('task_id')
+    status = poll_task(task_id)
+    if status is None or status == 'True':
+        return redirect(url_for('results' if status == 'True' else 'index'))
+    # Render the processing page normally
+    print 'Processing task:', task_id
+    return render_template('processing.html', task_id=task_id)
+
+
+@app.route('/results')
+def results():
+    if app.config['DEBUG']:
+        phone_numbers = scrape_gmail_messages(session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+        return render_template('results.html', phone_numbers=phone_numbers)
+    # Check for completion
+    task_id = session.get('task_id')
+    status = poll_task(task_id)
+    if status != 'True':
+        return redirect(url_for('processing' if status == 'False' else 'index'))
+    print 'Task complete:', task_id
+    # Show results
+    result = scrape_gmail_messages.AsyncResult(task_id)
+    phone_numbers = result.result
     return render_template('results.html', phone_numbers=phone_numbers)
+
+
+@app.route('/poll-task/<task_id>')
+def poll_task(task_id):
+    # Check whether the task is still processing and return True if complete, False if still processing, a string for progress, or None if not found
+    print 'Polled task:', task_id
+    if app.config['DEBUG']:
+        return 'True'
+    try:
+        result = scrape_gmail_messages.AsyncResult(task_id)
+        return str(result.ready())
+    except:
+        print 'No task:', task_id
+        return 'None'
+
 
 @app.route('/performance')
 def performance():
@@ -69,12 +113,10 @@ def performance():
         conn = psycopg2.connect(host = config['postgres']['host'], port = int(config['postgres']['port']), user = config['postgres']['username'], password = config['postgres']['password'], database = config['postgres']['database'])
         cur = conn.cursor()
         cur.execute('SELECT * FROM processed;')
-        entries_string = ''
-        for entry in cur.fetchall():
-            entries_string += str(entry) + '\n'
+        entries = cur.fetchall()
         cur.close()
         conn.close()
-        return entries_string
+        return render_template('performance.html', entries=entries)
     except:
         from traceback import format_exc
         return 'Error: could not get performance log.\n\n' + str(format_exc())

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Performance Log{% endblock %}
+
+{% block content %}
+<div class="content">
+    <article>
+        <h1>Performance Log</h1>
+        <p>
+            {% for entry in entries %}
+            {{ entry }} <br />
+            {% endfor %}
+        </p>
+    </article>
+</div>
+<div class="content-end"></div>
+{% endblock %}
