@@ -70,13 +70,13 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
                 )
                 cur = conn.cursor()
                 try:
-                    cur.execute("INSERT INTO processed (email, message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (email, message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
                 except psycopg2.ProgrammingError:
                     # Error, reset the connection
                     conn.rollback()
                     # Add table and retry
-                    cur.execute("CREATE TABLE processed (email varchar, message_count integer, phone_number_count integer, start_time timestamp, end_time timestamp);")
-                    cur.execute("INSERT INTO processed (email, message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (email, message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("CREATE TABLE processed (message_count integer, phone_number_count integer, start_time timestamp, end_time timestamp);")
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
                     print 'Database table "processed" created.'
                 conn.commit()
                 cur.close()
@@ -87,7 +87,7 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
             finally:
                 conn.close()
         else:
-            print 'Processed %s: Emails = %s, Phone Numbers = %s, Start = %s, End = %s' % (email, message_count, len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
+            print 'Processed %s: Phone Numbers = %s, Start = %s, End = %s' % (message_count, len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
         
         return phone_numbers
     except:
