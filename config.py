@@ -14,7 +14,6 @@ DevelopmentConfig.DEV_PORT = 80
 class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
-    DATABASE_URI = ''
     GMAIL_ERROR_USERNAME = ''
     GMAIL_ERROR_PASSWORD = ''
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken?scope=https://mail.google.com/+https://www.google.com/m8/feeds/'
@@ -29,12 +28,11 @@ class DevelopmentConfig(BaseConfig):
     DEV_HOST = 'localhost'
     DEV_PORT = 5000
     DEBUG = True
-    DATABASE_URI = 'sqlite://:memory:'
     LOG_LEVEL = 'DEBUG'
-    APP_SECRET_KEY = 'development-key'
+    APP_SECRET_KEY = 'DEBUG-KEY'
 
 class ProductionConfig(BaseConfig):
-    DATABASE_URI = 'mysql://dijscrape@localhost/dijscrape'
+    pass
 
 # Import the local configurations, if they exist
 try: import config_local
