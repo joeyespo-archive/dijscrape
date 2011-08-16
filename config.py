@@ -15,8 +15,8 @@ class BaseConfig(object):
     ADMINS = ['espo58@gmail.com']
     DEBUG = False
     DATABASE_URI = ''
-    LOG_FILE = None
-    LOG_LEVEL = 'INFO'
+    GMAIL_ERROR_USERNAME = ''
+    GMAIL_ERROR_PASSWORD = ''
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken?scope=https://mail.google.com/+https://www.google.com/m8/feeds/'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'

@@ -11,6 +11,9 @@ config_class_name = 'Development' if __name__ == '__main__' else 'Production'
 app = Flask(__name__)
 app.config.from_object('config.%sConfig' % config_class_name)
 app.secret_key = app.config['APP_SECRET_KEY']
+if app.config['GMAIL_ERROR_USERNAME']:
+    from util import GmailHandler
+    app.logger.addHandler(GmailHandler(app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'], 'DijScrape Failed'))
 # Init OAuth
 consumer = oauth.Consumer(app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
 client = oauth.Client(consumer)
