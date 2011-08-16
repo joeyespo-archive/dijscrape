@@ -52,8 +52,14 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
         
         # Find the phone numbers in each message
         for index in range(message_count):
-            phone_numbers += find_phone_numbers(imap, messages[index])
-            scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
+            try:
+                phone_numbers += find_phone_numbers(imap, messages[index])
+                scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
+            except:
+                print 'Error: could not parse message #%s. Skipping.' % index
+                from traceback import format_exc
+                print format_exc()
+                print
         
         imap.logout()
         end_datetime = datetime.now()
