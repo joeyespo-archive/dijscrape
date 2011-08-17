@@ -19,7 +19,7 @@ if config and 'postgres' not in config:
 
 
 number_re = re.compile('(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{4})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?')
-email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-Z0-9\._\-]+)>?')
+email_re = re.compile('("?([a-zA-Z 0-9\._\+\-\=]+)"?\s+)?<?([a-zA-Z0-9\._\+\-\=]+@[a-zA-Z0-9\._\+\-\=]+)>?')
 
 
 @task()
@@ -130,11 +130,17 @@ def find_phone_numbers(imap, number):
     date = dateutil.parser.parse(date_timestamp)
     print 'Header date:', date, '(', date_timestamp, ')'
     
-    # This may fail due to unicode issues
+    email = ''
     try:
-        name, email = email_re.match(msg['From']).groups()[1:3]
+        # TODO: Use a library for reliability, not a regular expression (email address rules are complex)
+        name = msg['From']
+        name_email = email_re.match(name)
+        if name_email is not None:
+            name, email = name_email.groups()[1:3]
         print 'From:', name, email
     except:
+        # TODO: Fix the unicode issues
+        # This may fail due to unicode issues
         from traceback import format_exc
         print format_exc()
         return []
