@@ -50,7 +50,7 @@ def oauth_authorized():
     if app.config['DEBUG']:
         return redirect(url_for('results'))
     # Start the task with the oauth and google keys
-    result = scrape_gmail_messages.delay(session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+    result = scrape_gmail_messages.delay(app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
     # Save the task ID and redirect to the processing page
     print 'Task started:', result.task_id
     session['task_id'] = result.task_id
@@ -72,7 +72,7 @@ def processing():
 @app.route('/results')
 def results():
     if app.config['DEBUG']:
-        phone_numbers = scrape_gmail_messages(session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+        phone_numbers = scrape_gmail_messages(app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
         return render_template('results.html', phone_numbers=phone_numbers)
     # Check for completion
     task_id = session.get('task_id')

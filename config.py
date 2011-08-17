@@ -20,6 +20,7 @@ class BaseConfig(object):
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
     # Override these in your local dev/production config file
+    MAILBOX_TO_SCRAPE = '[Gmail]/All Mail'
     APP_SECRET_KEY = ''
     GOOGLE_KEY = ''
     GOOELE_SECRET = ''
@@ -30,6 +31,7 @@ class DevelopmentConfig(BaseConfig):
     DEBUG = True
     LOG_LEVEL = 'DEBUG'
     APP_SECRET_KEY = 'DEBUG-KEY'
+    MAILBOX_TO_SCRAPE = 'INBOX'
 
 class ProductionConfig(BaseConfig):
     pass

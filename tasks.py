@@ -23,7 +23,7 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\-]+)"?\s+)?<?([a-zA-Z0-9\._\-]+@[a-zA-
 
 
 @task()
-def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+def scrape_gmail_messages(mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
     phone_numbers = []
     try:
         start_datetime = datetime.now()
@@ -42,8 +42,7 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
         imap.authenticate(url, consumer, token)
         
         # Get messages and message count
-        # TODO: imap.select('[Gmail]/All Mail')
-        resp, message_count = imap.select('[Gmail]/All Mail')
+        resp, message_count = imap.select(mailbox_to_scrape)
         message_count = int(message_count[0])
         print "Message count: %d" % message_count
         resp, messages = imap.search(None, 'ALL')
@@ -52,6 +51,7 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
         
         # Find the phone numbers in each message
         for index in range(message_count):
+            print 'Message %s/%s' % (index, message_count)
             try:
                 phone_numbers += find_phone_numbers(imap, messages[index])
                 scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
@@ -105,8 +105,6 @@ def scrape_gmail_messages(access_oauth_token, access_oauth_token_secret, consume
 @task()
 def find_phone_numbers(imap, number):
     # TODO: Clean up debugging info
-    print 'Processing message', number
-    
     resp, message_data = imap.fetch(number, '(BODY[])')
     raw_message = message_data[0][1]    # Encodes some data re: the request type
     msg = message_from_string(raw_message)
@@ -158,18 +156,22 @@ def find_phone_numbers(imap, number):
 
 
 def format_phone_number(s):
-    prefix = ''
-    if s.startswith('+'):
-        prefix = s[0]
-        s = s[1:]
-    # TODO: Clean this up
-    if len(s) == 7:
-        formatted = '%s-%s' % (s[0:3], s[3:7])
-    elif len(s) == 10:
-        formatted = '%s-%s-%s' % (s[0:3], s[3:6], s[6:10])
-    else:
-        formatted = s
-    return prefix + formatted
+    try:
+        # TODO: Use a library instead
+        prefix = ''
+        if s.startswith('+'):
+            prefix = s[0]
+            s = s[1:]
+        
+        if len(s) == 7:
+            formatted = '%s-%s' % (s[0:3], s[3:7])
+        elif len(s) == 10:
+            formatted = '%s-%s-%s' % (s[0:3], s[3:6], s[6:10])
+        else:
+            formatted = s
+        return prefix + formatted
+    except:
+        return s
 
 
 def get_id(xmldoc):
