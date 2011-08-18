@@ -8,6 +8,7 @@ import oauth2.clients.imap as imaplib
 from datetime import datetime
 from email import message_from_string
 from celery.decorators import task
+from util import send_gmail
 try:
     from bundle_config import config
 except:
@@ -23,7 +24,7 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\+\-\=]+)"?\s+)?<?([a-zA-Z0-9\._\+\-\=]
 
 
 @task()
-def scrape_gmail_messages(mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret):
+def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, gmail_error_username, gmail_error_password, admins):
     phone_numbers = []
     try:
         start_datetime = datetime.now()
@@ -52,7 +53,7 @@ def scrape_gmail_messages(mailbox_to_scrape, access_oauth_token, access_oauth_to
         # Find the phone numbers in each message
         for index in range(message_count):
             if index % 100 == 0:
-                print 'Message %s/%s (%s numbers so far)' % (index, message_count, len(found))
+                print 'Message %s/%s (%s numbers so far)' % (index, message_count, len(phone_numbers))
             try:
                 phone_numbers += find_phone_numbers(imap, messages[index])
                 scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
@@ -99,7 +100,10 @@ def scrape_gmail_messages(mailbox_to_scrape, access_oauth_token, access_oauth_to
         return phone_numbers
     except:
         from traceback import format_exc
-        print format_exc()
+        exc = format_exc()
+        print exc
+        if debug and gmail_error_username:
+            send_gmail(gmail_error_username, gmail_error_password, admins, 'DijScrape Task Failed', exc)
         return phone_numbers
 
 

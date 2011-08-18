@@ -51,7 +51,7 @@ def oauth_authorized():
     if app.config['DEBUG']:
         return redirect(url_for('results'))
     # Start the task with the oauth and google keys
-    result = scrape_gmail_messages.delay(app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+    result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
     # Save the task ID and redirect to the processing page
     print 'Task started:', result.task_id
     session['task_id'] = result.task_id
@@ -63,7 +63,7 @@ def processing():
     # Check whether we're still processing in case there's a hard refresh
     task_id = session.get('task_id')
     task, ready = get_task_status(task_id)
-    if ready is None:
+    if task is None:
         return redirect(url_for('index'))
     elif ready:
         return redirect(url_for('results'))
@@ -75,14 +75,14 @@ def processing():
 @app.route('/results')
 def results():
     if app.config['DEBUG']:
-        phone_numbers = scrape_gmail_messages(app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+        phone_numbers = scrape_gmail_messages(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
         return render_template('results.html', phone_numbers=phone_numbers)
     # Check for completion
     task_id = session.get('task_id')
     task, ready = get_task_status(task_id)
-    if ready is None:
+    if task is None:
         return redirect(url_for('index'))
-    if not ready:
+    elif not ready:
         return redirect(url_for('processing'))
     print 'Task complete:', task_id
     # Show results
@@ -99,8 +99,10 @@ def poll_task(task_id):
     elif ready:
         return json.dumps(True)
     else:
+        task_index = 5
+        task_count = 1100
         print 'TASK INFO:', repr(task.state)
-        return json.dumps(True)
+        return json.dumps('%s of %s' % (task_index, task_count))
 
 
 @app.route('/performance')
@@ -143,8 +145,8 @@ def get_task_status(task_id):
     if app.config['DEBUG']:
         return 'debug-task', True
     try:
-        result = scrape_gmail_messages.AsyncResult(task_id)
-        return result, result.ready()
+        task = scrape_gmail_messages.AsyncResult(task_id)
+        return task, task.ready()
     except:
         print 'No task:', task_id
         return None, None
