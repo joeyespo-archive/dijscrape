@@ -23,7 +23,8 @@
     <article>
         <h1>Finding phone numbers</h1>
         <p>
-            Processing messages. <span id="progress">Please wait.</span>
+            <span class="processing-text">Processing messages. <span id="progress">Please wait.</span></span>
+            <img class="spinner" src="{{ url_for('.static', filename='spinner.gif') }}" alt="Pleast wait" width="37" height="39" />
         </p>
     </article>
 </div>
