@@ -99,7 +99,9 @@ def poll_task(task_id):
     elif ready:
         return json.dumps(True)
     else:
-        if task.state and len(task.state) > 2:
+        print task.state
+        
+        if task.state and len(task.state) >= 2:
             task_index, task_count = task.state
             return json.dumps('%s of %s' % (task_index, task_count))
         return json.dumps('unknown progress')
