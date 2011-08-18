@@ -114,7 +114,7 @@ def find_phone_numbers(imap, number):
     for part in msg.walk():
         c_type = part.get_content_type()
         if part.get_content_type() == 'text/plain':
-            content += '\n' + part.get_payload()
+            content += '\n' + part.get_payload().decode('utf-8', 'ignore')
     
     # Find the phone numbers
     # TODO: Use finditer to get the MatchObject instances for highlighting the matched numbers in the results
