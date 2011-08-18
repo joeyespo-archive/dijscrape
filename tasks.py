@@ -44,17 +44,24 @@ def scrape_gmail_messages(mailbox_to_scrape, access_oauth_token, access_oauth_to
         # Get messages and message count
         resp, message_count = imap.select(mailbox_to_scrape)
         message_count = int(message_count[0])
-        print "Message count: %d" % message_count
         resp, messages = imap.search(None, 'ALL')
         messages = messages[0].split()
+        
         scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": 0, "total": message_count})
+        print "Message count: %d" % message_count
         
         # Find the phone numbers in each message
         for index in range(message_count):
-            print 'Message %s/%s' % (index, message_count)
+            if index % 50 == 0:
+                print 'Message %s/%s' % (index, message_count)
             try:
-                phone_numbers += find_phone_numbers(imap, messages[index])
+                found = find_phone_numbers(imap, messages[index])
+                phone_numbers += found
                 scrape_gmail_messages.update_state(state="PROGRESS", meta={"current": index + 1, "total": message_count})
+                if len(found) > 0:
+                    if index % 50 != 0:
+                        print 'Message %s/%s' % (index, message_count)
+                    print 'Phone numbers (%s): %s' % (len(phone_numbers), phone_numbers)
             except:
                 print 'Error: could not parse message #%s. Skipping.' % index
                 from traceback import format_exc
@@ -122,13 +129,11 @@ def find_phone_numbers(imap, number):
     # TODO: Make this more clear (flattens ['','650','555','1212'] to a string) then accept only numbers with ten or more digits
     phone_numbers = list(set(map(''.join, raw_phone_numbers)))
     phone_numbers = filter(lambda x: len(x) >= 10, phone_numbers)
-    print 'Phone numbers (%s): %s' % (len(phone_numbers), phone_numbers)
     if len(phone_numbers) == 0:
         return []
     
     date_timestamp = msg['Date']
     date = dateutil.parser.parse(date_timestamp)
-    print 'Header date:', date, '(', date_timestamp, ')'
     
     email = ''
     try:
@@ -137,7 +142,6 @@ def find_phone_numbers(imap, number):
         name_email = email_re.match(name)
         if name_email is not None:
             name, email = name_email.groups()[1:3]
-        print 'From:', name, email
     except:
         # TODO: Fix the unicode issues
         # This may fail due to unicode issues
