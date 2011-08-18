@@ -47,7 +47,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
         message_count = int(message_count[0])
         resp, messages = imap.search(None, 'ALL')
         messages = messages[0].split()
-        scrape_gmail_messages.update_state(state={"current": 0, "total": message_count})
+        scrape_gmail_messages.update_state(state=(0, message_count))
         print "Message count: %d" % message_count
         
         # Find the phone numbers in each message
@@ -56,7 +56,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
                 print 'Message %s/%s (%s numbers so far)' % (index, message_count, len(phone_numbers))
             try:
                 phone_numbers += find_phone_numbers(imap, messages[index])
-                scrape_gmail_messages.update_state(state={"current": index + 1, "total": message_count})
+                scrape_gmail_messages.update_state(state=(index + 1, message_count))
             except:
                 print 'Error: could not parse message #%s. Skipping.' % index
                 from traceback import format_exc
@@ -102,7 +102,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
         from traceback import format_exc
         exc = format_exc()
         print exc
-        if debug and gmail_error_username:
+        if not debug and gmail_error_username:
             send_gmail(gmail_error_username, gmail_error_password, admins, 'DijScrape Task Failed', exc)
         return phone_numbers
 
