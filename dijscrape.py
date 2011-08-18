@@ -99,8 +99,8 @@ def poll_task(task_id):
     elif ready:
         return json.dumps(True)
     else:
-        task_index = 5
-        task_count = 1100
+        task_index = task.state['current'] if task.state and 'current' in task.state else 'unknown'
+        task_count = task.state['total'] if task.state and 'total' in task.state else 'unknown'
         print 'TASK INFO:', repr(task.state)
         return json.dumps('%s of %s' % (task_index, task_count))
 
