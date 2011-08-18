@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cgi
+import json
 import oauth2 as oauth
 from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
 from tasks import scrape_gmail_messages
@@ -61,9 +62,11 @@ def oauth_authorized():
 def processing():
     # Check whether we're still processing in case there's a hard refresh
     task_id = session.get('task_id')
-    status = poll_task(task_id)
-    if status is None or status == 'True':
-        return redirect(url_for('results' if status == 'True' else 'index'))
+    task, ready = get_task_status(task_id)
+    if ready is None:
+        return redirect(url_for('index'))
+    elif ready:
+        return redirect(url_for('results'))
     # Render the processing page normally
     print 'Processing task:', task_id
     return render_template('processing.html', task_id=task_id)
@@ -76,9 +79,11 @@ def results():
         return render_template('results.html', phone_numbers=phone_numbers)
     # Check for completion
     task_id = session.get('task_id')
-    status = poll_task(task_id)
-    if status != 'True':
-        return redirect(url_for('processing' if status == 'False' else 'index'))
+    task, ready = get_task_status(task_id)
+    if ready is None:
+        return redirect(url_for('index'))
+    if not ready:
+        return redirect(url_for('processing'))
     print 'Task complete:', task_id
     # Show results
     result = scrape_gmail_messages.AsyncResult(task_id)
@@ -88,16 +93,14 @@ def results():
 
 @app.route('/poll-task/<task_id>')
 def poll_task(task_id):
-    # Check whether the task is still processing and return True if complete, False if still processing, a string for progress, or None if not found
-    print 'Polled task:', task_id
-    if app.config['DEBUG']:
-        return 'True'
-    try:
-        result = scrape_gmail_messages.AsyncResult(task_id)
-        return str(result.ready())
-    except:
-        print 'No task:', task_id
-        return 'None'
+    task, ready = get_task_status(task_id)
+    if not task:
+        return json.dumps(None)
+    elif ready:
+        return json.dumps(True)
+    else:
+        print 'TASK INFO:', repr(task.state)
+        return json.dumps(True)
 
 
 @app.route('/performance')
@@ -132,6 +135,19 @@ def page_not_found(message = None):
 @app.route('/internal_error.html')
 def internal_error(message = None):
     return render_template('error500.html'), 500
+
+
+# Helper methods
+def get_task_status(task_id):
+    print 'Polled task:', task_id
+    if app.config['DEBUG']:
+        return 'debug-task', True
+    try:
+        result = scrape_gmail_messages.AsyncResult(task_id)
+        return result, result.ready()
+    except:
+        print 'No task:', task_id
+        return None, None
 
 
 # Run dev server
