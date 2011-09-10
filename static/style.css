@@ -86,7 +86,13 @@ h1 {
     float: left;
     position: relative;
     top: -12px;
-    margin-left: 8px;
+    margin-left: 16px;
+}
+.end-processing {
+    clear: both;
+}
+.notify-info {
+    margin: 0;
 }
 
 
@@ -121,6 +127,20 @@ h1 {
 .full-context h1 {
     font-size: 18pt;
     padding: 4px 0;
+}
+
+.clear-results {
+    clear: both;
+    text-decoration: underline;
+}
+.clear-results a {
+    float: right;
+    font-size: 8pt;
+    color: #aaa;
+    text-decoration: none;
+}
+.clear-results a:hover {
+    text-decoration: underline;
 }
 
 .feedback {

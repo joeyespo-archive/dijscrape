@@ -24,7 +24,7 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\+\-\=]+)"?\s+)?<?([a-zA-Z0-9\._\+\-\=]
 
 
 @task()
-def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, gmail_error_username, gmail_error_password, admins):
+def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, gmail_notify_username, gmail_notify_password, gmail_error_username, gmail_error_password, admins):
     phone_numbers = []
     try:
         start_datetime = datetime.now()
@@ -42,21 +42,21 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
         imap = imaplib.IMAP4_SSL('imap.googlemail.com')
         imap.authenticate(url, consumer, token)
         
-        # Get messages and message count
-        resp, message_count = imap.select(mailbox_to_scrape)
-        message_count = int(message_count[0])
-        resp, messages = imap.search(None, 'ALL')
+        # Get message count
+        resp, count = imap.select(mailbox_to_scrape)
+        # Get only seen messages
+        resp, messages = imap.search(None, 'SEEN')
         messages = messages[0].split()
-        scrape_gmail_messages.update_state(state=(0, message_count))
-        print "Message count: %d" % message_count
+        scrape_gmail_messages.update_state(state=(0, len(messages)))
+        print "Message count: %d" % len(messages)
         
         # Find the phone numbers in each message
-        for index in range(message_count):
+        for index in range(len(messages)):
             if index % 100 == 0:
-                print 'Message %s/%s (%s numbers so far)' % (index, message_count, len(phone_numbers))
+                print 'Message %s/%s (%s numbers so far)' % (index, len(messages), len(phone_numbers))
             try:
                 phone_numbers += find_phone_numbers(imap, messages[index])
-                scrape_gmail_messages.update_state(state=(index + 1, message_count))
+                scrape_gmail_messages.update_state(state=(index + 1, len(messages)))
             except:
                 print 'Error: could not parse message #%s. Skipping.' % index
                 from traceback import format_exc
@@ -78,13 +78,13 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
                 )
                 cur = conn.cursor()
                 try:
-                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (len(messages), len(phone_numbers), start_datetime, end_datetime))
                 except psycopg2.ProgrammingError:
                     # Error, reset the connection
                     conn.rollback()
                     # Add table and retry
                     cur.execute("CREATE TABLE processed (message_count integer, phone_number_count integer, start_time timestamp, end_time timestamp);")
-                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (message_count, len(phone_numbers), start_datetime, end_datetime))
+                    cur.execute("INSERT INTO processed (message_count, phone_number_count, start_time, end_time) VALUES (%s, %s, %s, %s)", (len(messages), len(phone_numbers), start_datetime, end_datetime))
                     print 'Database table "processed" created.'
                 conn.commit()
                 cur.close()
@@ -95,7 +95,11 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
             finally:
                 conn.close()
         else:
-            print 'Processed %s: Phone Numbers = %s, Start = %s, End = %s' % (message_count, len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
+            print 'Processed %s: Phone Numbers = %s, Start = %s, End = %s' % (len(messages), len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
+        
+        # Send completion email
+        if gmail_notify_username:
+            send_gmail(gmail_notify_username, gmail_notify_password, email, 'Your DijScrape has finished', 'Hi, we are sending this message to inform you that your DijScrape has finished! To see your phone numbers, head back over to http://www.dijscrape.com/')
         
         return phone_numbers
     except:

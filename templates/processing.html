@@ -5,7 +5,7 @@
 <script src="{{ url_for('.static', filename='lib/timers/jquery.timers-1.2.js') }}"></script>
 <script>
     function poll_task() {
-        $.getJSON("poll-task/{{ task_id }}", function(data) {
+        $.getJSON("poll-task", function(data) {
             if(data === true)
                 window.location.replace("results");
             else if(data)
@@ -26,6 +26,13 @@
             <span class="processing-text">Processing messages. <span id="progress">Please wait.</span></span>
             <img class="spinner" src="{{ url_for('.static', filename='spinner.gif') }}" alt="Pleast wait" width="37" height="39" />
         </p>
+        <div class="end-processing"></div>
+        <p class="notify-info">
+            Feel free to leave this page and return at any time to check your progress. We'll also send you an email when we're done.
+        </p>
+        <div class="clear-results">
+            <a href="/reset">Stop Processing</a>
+        </div>
     </article>
 </div>
 <div class="content-end"></div>

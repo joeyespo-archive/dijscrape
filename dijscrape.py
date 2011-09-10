@@ -23,13 +23,17 @@ client = oauth.Client(consumer)
 # Views
 @app.route('/')
 def index():
-    # Check for active task
+    task, ready = get_task_status()
+    if task is not None:
+        return redirect(url_for('results' if ready else 'processing'))
     return render_template('index.html')
 
 
 @app.route('/login')
 def login():
-    # TODO: Check for active task
+    task, ready = get_task_status()
+    if task is not None:
+        return redirect(url_for('results' if ready else 'processing'))
     resp, content = client.request(app.config['OAUTH_REQUEST_TOKEN_URL'])
     if resp['status'] != '200':
         abort(502, 'Invalid response from Google. Please try again later.')
@@ -40,7 +44,10 @@ def login():
 
 @app.route('/oauth-authorized')
 def oauth_authorized():
-    token = oauth.Token(session['request_token']['oauth_token'], session['request_token']['oauth_token_secret'])
+    request_token = session.pop('request_token', None)
+    if not request_token:
+        return redirect(url_for('index'))
+    token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
     client = oauth.Client(consumer, token)
     resp, content = client.request(app.config['OAUTH_ACCESS_TOKEN_URL'])
     # TODO: Handle 'Deny access' (status 400)
@@ -51,7 +58,7 @@ def oauth_authorized():
     if app.config['DEBUG']:
         return redirect(url_for('results'))
     # Start the task with the oauth and google keys
-    result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
+    result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_NOTIFY_USERNAME'], app.config['GMAIL_NOTIFY_PASSWORD'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
     # Save the task ID and redirect to the processing page
     print 'Task started:', result.task_id
     session['task_id'] = result.task_id
@@ -60,49 +67,46 @@ def oauth_authorized():
 
 @app.route('/processing')
 def processing():
-    # Check whether we're still processing in case there's a hard refresh
-    task_id = session.get('task_id')
-    task, ready = get_task_status(task_id)
+    task, ready = get_task_status()
     if task is None:
         return redirect(url_for('index'))
     elif ready:
         return redirect(url_for('results'))
-    # Render the processing page normally
-    print 'Processing task:', task_id
-    return render_template('processing.html', task_id=task_id)
+    print 'Processing task:', task.task_id
+    return render_template('processing.html')
 
 
 @app.route('/results')
 def results():
     if app.config['DEBUG']:
-        phone_numbers = scrape_gmail_messages(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
+        if not session.get('access_token', None):
+            return redirect(url_for('index'))
+        phone_numbers = scrape_gmail_messages(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_NOTIFY_USERNAME'], app.config['GMAIL_NOTIFY_PASSWORD'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
         return render_template('results.html', phone_numbers=phone_numbers)
-    # Check for completion
-    task_id = session.get('task_id')
-    task, ready = get_task_status(task_id)
+    task, ready = get_task_status()
     if task is None:
         return redirect(url_for('index'))
     elif not ready:
         return redirect(url_for('processing'))
-    print 'Task complete:', task_id
-    # Show results
-    result = scrape_gmail_messages.AsyncResult(task_id)
-    phone_numbers = result.result
-    return render_template('results.html', phone_numbers=phone_numbers)
+    return render_template('results.html', phone_numbers=task.result)
 
 
-@app.route('/poll-task/<task_id>')
-def poll_task(task_id):
-    task, ready = get_task_status(task_id)
+@app.route('/poll-task')
+def poll_task():
+    task, ready = get_task_status()
     if not task:
         return json.dumps(None)
     elif ready:
         return json.dumps(True)
-    else:
-        if task.state and len(task.state) == 2:
-            task_index, task_count = task.state
-            return json.dumps('%s of %s' % (task_index, task_count))
-        return json.dumps('unknown progress')
+    return json.dumps('%s of %s' % task.state if task.state and len(task.state) == 2 else 'unknown progress')
+
+
+@app.route('/reset')
+def reset():
+    session.pop('task_id', None)
+    session.pop('request_token', None)
+    session.pop('access_token', None)
+    return redirect(url_for('index'))
 
 
 @app.route('/performance')
@@ -140,7 +144,11 @@ def internal_error(message = None):
 
 
 # Helper methods
-def get_task_status(task_id):
+def get_task_status(task_id = None):
+    if task_id is None:
+        task_id = session.get('task_id', None)
+    if not task_id:
+        return None, None
     print 'Polled task:', task_id
     if app.config['DEBUG']:
         return 'debug-task', True

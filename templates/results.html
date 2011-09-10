@@ -38,6 +38,8 @@
             Note: only your inbox is checked at the moment. Also, conversations with more than one message are not yet handled.
             Try putting a single message containing a phone number there.
         </p>
+            
+        <a class="clear-results" href="/reset">Clear Results</a>
         {% else %}
         <h1> Phone numbers found ({{ phone_numbers|length }}) </h1>
         <div class="results">
@@ -70,6 +72,8 @@
                 </div>
                 {% endfor %}
             </div>
+            
+            <a class="clear-results" href="/reset">Clear Results</a>
         </div>
         {% endif %}
         

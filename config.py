@@ -19,6 +19,8 @@ class BaseConfig(object):
     OAUTH_REQUEST_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetRequestToken?scope=https://mail.google.com/+https://www.google.com/m8/feeds/'
     OAUTH_AUTHORIZATION_URL = 'https://www.google.com/accounts/OAuthAuthorizeToken'
     OAUTH_ACCESS_TOKEN_URL = 'https://www.google.com/accounts/OAuthGetAccessToken'
+    GMAIL_NOTIFY_USERNAME = ''
+    GMAIL_NOTIFY_PASSWORD = ''
     # Override these in your local dev/production config file
     MAILBOX_TO_SCRAPE = '[Gmail]/All Mail'
     APP_SECRET_KEY = ''
