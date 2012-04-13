@@ -1,3 +1,4 @@
+python-dateutil
 celery
 oauth2
 psycopg2
