@@ -1,19 +1,17 @@
-# Environment-specific files such as configuration, logs, and setup
-docs/*
-env/*
-logs/*
-instance/*
+# Environment-specific files such as configuration and logs
+build/
+instance/
+logs/
 local_config.py
 config_dev.py
 config_prod.py
 celeryconfig.py
-.epio-app
-epio.ini
 
-# Python bytecode files
 *.pyc
+*.egg-info
+*epio*
 
 # Misc and OS files
-Desktop.ini             # Directory atttributes in Windows.
-Thumbs.db               # Picture thumbnail cache in Windows 98.
-.DS_Store               # Directory attributes in Mac OS X.
+Desktop.ini         # Windows directory atttributes
+Thumbs.db           # Windows picture thumbnail cache
+.DS_Store           # Mac OSX directory attributes
