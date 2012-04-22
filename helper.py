@@ -46,13 +46,15 @@ def send_email(email_info, to, subject, body, attach=None):
     mailServer.close()
 
 
-def email_errors(app, email_info=None, error_level=logging.ERROR):
+def email_errors(app, email_info=None, subject=None, admins=None, error_level=logging.ERROR):
     """Enables error reporting using SMTP for the provided app."""
     if not email_info:
         email_info = app.config.get('ERROR_EMAIL_INFO')
     if not email_info:
         return
-    mailhost, from_address, to_addresses, subject, credentials = email_info
+    subject = subject or app.config.get('ERROR_EMAIL_SUBJECT', 'Error')     # TODO: Use more sensible default
+    to_addresses = admins or app.config.get('ADMINS', [])                   # TODO: Make this better
+    (mailhost, mailport), credentials, from_address = email_info
     mail_handler = TlsSMTPHandler(mailhost, from_address, to_addresses, subject, credentials)
     if error_level:
         mail_handler.setLevel(error_level)
