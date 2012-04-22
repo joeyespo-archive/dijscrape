@@ -1,3 +1,5 @@
+gunicorn
+gevent
 python-dateutil
 celery
 oauth2

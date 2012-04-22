@@ -8,7 +8,7 @@ import oauth2.clients.imap as imaplib
 from datetime import datetime
 from email import message_from_string
 from celery.decorators import task
-from util import send_gmail
+from helper import send_email
 try:
     from bundle_config import config
 except:
@@ -24,7 +24,7 @@ email_re = re.compile('("?([a-zA-Z 0-9\._\+\-\=]+)"?\s+)?<?([a-zA-Z0-9\._\+\-\=]
 
 
 @task()
-def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, gmail_notify_username, gmail_notify_password, gmail_error_username, gmail_error_password, admins):
+def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, app_email_info, error_email_info, admins):
     phone_numbers = []
     try:
         start_datetime = datetime.now()
@@ -98,16 +98,16 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
             print 'Processed %s: Phone Numbers = %s, Start = %s, End = %s' % (len(messages), len(phone_numbers), start_datetime.strftime('%m/%d/%Y %I:%M:%S %p'), end_datetime.strftime('%m/%d/%Y %I:%M:%S %p'))
         
         # Send completion email
-        if gmail_notify_username:
-            send_gmail(gmail_notify_username, gmail_notify_password, email, 'Your DijScrape has finished', 'Hi, we are sending this message to inform you that your DijScrape has finished! To see your phone numbers, head back over to http://www.dijscrape.com/')
+        if app_email_info:
+            send_email(app_email_info, email, 'Your DijScrape has finished', 'Hi, we are sending this message to inform you that your DijScrape has finished! To see your phone numbers, head back over to http://www.dijscrape.com/')
         
         return phone_numbers
     except:
         from traceback import format_exc
         exc = format_exc()
         print exc
-        if not debug and gmail_error_username:
-            send_gmail(gmail_error_username, gmail_error_password, admins, 'DijScrape Task Failed', exc)
+        if not debug and error_email_info:
+            send_email(error_email_info, admins, 'DijScrape Task Failed', exc)
         return phone_numbers
 
 

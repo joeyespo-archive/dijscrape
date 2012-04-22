@@ -1,22 +1,30 @@
-#!/usr/bin/env python
+"""\
+Dijscrape
+"""
 
 import cgi
 import json
 import oauth2 as oauth
+from logging import error, info
+from logging.config import dictConfig
 from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
 from tasks import scrape_gmail_messages
+from helper import email_errors
+
+__version__ = '0.2'
 
 
 # Flask application
-config_class_name = 'Development' if __name__ == '__main__' else 'Production'
-app = Flask(__name__)
-app.config.from_object('config.%sConfig' % config_class_name)
-app.secret_key = app.config['APP_SECRET_KEY']
-if app.config['GMAIL_ERROR_USERNAME']:
-    from util import GmailHandler
-    app.logger.addHandler(GmailHandler(app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'], 'DijScrape Failed'))
+app = Flask(__name__, instance_relative_config=True)
+app.config.from_object('default_config')
+app.config.from_envvar('SETTINGS_MODULE', silent=True)
+if __name__ == '__main__':
+    app.config.from_pyfile('dev_config.py', silent=True)
+if 'LOGGING' in app.config:
+    dictConfig(app.config['LOGGING'])
+email_errors(app)
 # Init OAuth
-consumer = oauth.Consumer(app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'])
+consumer = oauth.Consumer(app.config['OAUTH_GMAIL_KEY'], app.config['OAUTH_GMAIL_SECRET'])
 client = oauth.Client(consumer)
 
 
@@ -58,7 +66,7 @@ def oauth_authorized():
     if app.config['DEBUG']:
         return redirect(url_for('results'))
     # Start the task with the oauth and google keys
-    result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_NOTIFY_USERNAME'], app.config['GMAIL_NOTIFY_PASSWORD'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
+    result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['OAUTH_GMAIL_KEY'], app.config['OAUTH_GMAIL_SECRET'], app.config['APP_EMAIL_INFO'], app.config['ERROR_EMAIL_INFO'], app.config['ADMINS'])
     # Save the task ID and redirect to the processing page
     print 'Task started:', result.task_id
     session['task_id'] = result.task_id
@@ -81,7 +89,7 @@ def results():
     if app.config['DEBUG']:
         if not session.get('access_token', None):
             return redirect(url_for('index'))
-        phone_numbers = scrape_gmail_messages(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['GOOGLE_KEY'], app.config['GOOGLE_SECRET'], app.config['GMAIL_NOTIFY_USERNAME'], app.config['GMAIL_NOTIFY_PASSWORD'], app.config['GMAIL_ERROR_USERNAME'], app.config['GMAIL_ERROR_PASSWORD'], app.config['ADMINS'])
+        phone_numbers = scrape_gmail_messages(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['OAUTH_GMAIL_KEY'], app.config['OAUTH_GMAIL_SECRET'], app.config['APP_EMAIL_INFO'], app.config['ERROR_EMAIL_INFO'], app.config['ADMINS'])
         return render_template('results.html', phone_numbers=phone_numbers)
     task, ready = get_task_status()
     if task is None:
@@ -162,4 +170,4 @@ def get_task_status(task_id = None):
 
 # Run dev server
 if __name__ == '__main__':
-    app.run(app.config['DEV_HOST'], port=app.config['DEV_PORT'], debug=app.config['DEBUG'])
+    app.run(app.config['HOST'], app.config['PORT'], app.debug != False)
