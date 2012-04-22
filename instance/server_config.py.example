@@ -1,0 +1,30 @@
+"""\
+Server-Specific Config
+
+The recommended usage of this file is to rename it to <servername>_config.py.
+This can be loaded by setting the SETTINGS_MODULE environment variable to here.
+
+See 'default_config.py' for a complete list of overridable settings.
+"""
+
+
+# Admin settings
+ADMINS = []             # List of admin email addresses for error notifications
+
+# Security settings
+SECRET_KEY = None       # Generate a key and put it here for secure cookies
+
+# Email settings
+APP_EMAIL_INFO = None   # Format: ((HOST, PORT), (EMAIL_USER, EMAIL_PASS), FROM_ADDRESS)
+ERROR_EMAIL_INFO = None # Format: ((HOST, PORT), (EMAIL_USER, EMAIL_PASS), FROM_ADDRESS)
+
+# User feedback settings
+ANALYTICS_SCRIPT = None # The JavaScript code, not HTML, for your analytics
+FEEDBACK_BLOCK = None   # The HTML block for feedback styles and scripts
+
+# OAuth settings
+OAUTH_GMAIL_KEY = ''    # The OAuth key for accessing Gmail
+OAUTH_GMAIL_SECRET = '' # The OAuth secret for accessing Gmail
+
+# Scraper settings
+MAILBOX_TO_SCRAPE = 'INBOX' # The mailbox to scrape, overridden for speed tests
