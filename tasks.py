@@ -1,6 +1,6 @@
 import re
 import time
-import dateutil
+import dateutil.parser
 import xml.dom.minidom
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
