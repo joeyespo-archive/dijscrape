@@ -1,13 +1,12 @@
 import re
 import time
 import dateutil
-import psycopg2
 import xml.dom.minidom
 import oauth2 as oauth
 import oauth2.clients.imap as imaplib
 from datetime import datetime
 from email import message_from_string
-from celery.decorators import task
+from worker import delayable
 from helper import send_email
 try:
     from bundle_config import config
@@ -23,7 +22,7 @@ number_re = re.compile('(?:(?:\+?1\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][0
 email_re = re.compile('("?([a-zA-Z 0-9\._\+\-\=]+)"?\s+)?<?([a-zA-Z0-9\._\+\-\=]+@[a-zA-Z0-9\._\+\-\=]+)>?')
 
 
-@task()
+@delayable
 def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_oauth_token_secret, consumer_key, consumer_secret, app_email_info, error_email_info, admins):
     phone_numbers = []
     try:
@@ -47,7 +46,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
         # Get only seen messages
         resp, messages = imap.search(None, 'SEEN')
         messages = messages[0].split()
-        scrape_gmail_messages.update_state(state=(0, len(messages)))
+        # TODO: scrape_gmail_messages.update_state(state=(0, len(messages)))
         print "Message count: %d" % len(messages)
         
         # Find the phone numbers in each message
@@ -56,7 +55,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
                 print 'Message %s/%s (%s numbers so far)' % (index, len(messages), len(phone_numbers))
             try:
                 phone_numbers += find_phone_numbers(imap, messages[index])
-                scrape_gmail_messages.update_state(state=(index + 1, len(messages)))
+                # TODO: scrape_gmail_messages.update_state(state=(index + 1, len(messages)))
             except:
                 print 'Error: could not parse message #%s. Skipping.' % index
                 from traceback import format_exc
@@ -111,7 +110,7 @@ def scrape_gmail_messages(debug, mailbox_to_scrape, access_oauth_token, access_o
         return phone_numbers
 
 
-@task()
+@delayable
 def find_phone_numbers(imap, number):
     # TODO: Clean up debugging info
     resp, message_data = imap.fetch(number, '(BODY[])')

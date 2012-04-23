@@ -2,6 +2,7 @@
 Dijscrape
 """
 
+import os
 import cgi
 import json
 import oauth2 as oauth
@@ -119,6 +120,9 @@ def reset():
 
 @app.route('/performance')
 def performance():
+    return 'No implemented'
+    
+    # TODO: re-implement
     try:
         from bundle_config import config
     except:
@@ -137,7 +141,7 @@ def performance():
     except:
         from traceback import format_exc
         return 'Error: could not get performance log.\n\n' + str(format_exc())
-        
+
 
 # Error handlers
 @app.errorhandler(404)
@@ -170,4 +174,10 @@ def get_task_status(task_id = None):
 
 # Run dev server
 if __name__ == '__main__':
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+        print ' * Starting task workers'
+        from worker import TaskWorker
+        worker = TaskWorker(app, queue_key='default', debug=app.debug)
+        worker.reset()
+        worker.start()
     app.run(app.config['HOST'], app.config['PORT'], app.debug != False)

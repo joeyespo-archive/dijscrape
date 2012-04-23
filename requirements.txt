@@ -1,7 +1,6 @@
 gunicorn
 gevent
 python-dateutil
-celery
+redis
 oauth2
-psycopg2
 flask
