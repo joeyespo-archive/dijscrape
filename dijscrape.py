@@ -69,8 +69,8 @@ def oauth_authorized():
     # Start the task with the oauth and google keys
     result = scrape_gmail_messages.delay(app.config['DEBUG'], app.config['MAILBOX_TO_SCRAPE'], session['access_token']['oauth_token'], session['access_token']['oauth_token_secret'], app.config['OAUTH_GMAIL_KEY'], app.config['OAUTH_GMAIL_SECRET'], app.config['APP_EMAIL_INFO'], app.config['ERROR_EMAIL_INFO'], app.config['ADMINS'])
     # Save the task ID and redirect to the processing page
-    print 'Task started:', result.task_id
-    session['task_id'] = result.task_id
+    print 'Task started:', result.id
+    session['task_id'] = result.id
     return redirect(url_for('processing'))
 
 
@@ -81,7 +81,7 @@ def processing():
         return redirect(url_for('index'))
     elif ready:
         return redirect(url_for('results'))
-    print 'Processing task:', task.task_id
+    print 'Processing task:', task.id
     return render_template('processing.html')
 
 
@@ -165,6 +165,7 @@ def get_task_status(task_id = None):
     if app.config['DEBUG']:
         return 'debug-task', True
     try:
+        # TODO: Get this working
         task = scrape_gmail_messages.AsyncResult(task_id)
         return task, task.ready()
     except:

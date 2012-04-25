@@ -6,7 +6,8 @@ Run this script or start a TaskWorker instance to run background tasks.
 Initial code can be found here: http://flask.pocoo.org/snippets/73/
 """
 
-import logging
+import os
+import urlparse
 from threading import Thread
 from pickle import dumps, loads
 from uuid import uuid4
@@ -16,8 +17,12 @@ from traceback import format_exc
 from flask import current_app
 
 
-logger = logging.getLogger('worker')
-redis = Redis()
+def create_redis():
+    if not os.environ.has_key('REDISTOGO_URL'):
+        return Redis()
+    urlparse.uses_netloc.append('redis')
+    url = urlparse.urlparse(os.environ['REDISTOGO_URL'])
+    return Redis(host=url.hostname, port=url.port, db=0, password=url.password)
 
 
 class TaskWorker(Thread):
@@ -28,7 +33,7 @@ class TaskWorker(Thread):
         self.queue_key = queue_key
         self.port = port
         self.rv_ttl = rv_ttl or 500
-        self.redis = redis or Redis()
+        self.redis = redis or create_redis()
         self.worker_name = worker_name or (thread_name if worker_name is None else None)
         self.debug = app.debug if (debug is None and app) else (debug or False)
         self._worker_prefix = (self.worker_name + ': ') if self.worker_name else ''
@@ -46,7 +51,7 @@ class TaskWorker(Thread):
     def reset(self):
         """Resets the database to an empty task queue."""
         try:
-            redis.flushdb()
+            self.redis.flushdb()
         except ConnectionError:
             pass
     
@@ -60,7 +65,7 @@ class TaskWorker(Thread):
                 print ' * %sDisconnected, waiting for task queue...\n' % self._worker_prefix,
                 while True:
                     try:
-                        redis.ping()
+                        self.redis.ping()
                         sleep(1)
                         break
                     except ConnectionError:
@@ -82,6 +87,9 @@ class TaskWorker(Thread):
         if rv is not None:
             self.redis.set(task_id, dumps(rv))
             self.redis.expire(task_id, self.rv_ttl)
+
+
+redis = create_redis()
 
 
 class Task(object):
